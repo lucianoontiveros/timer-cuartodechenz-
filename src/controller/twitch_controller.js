@@ -1,13 +1,16 @@
 import tmi from "tmi.js";
 
 export const twitch_controller = () => {
+  const { VITE_APP_USERNAME, VITE_APP_PASSWORD, VITE_APP_CHANNELS } =
+    import.meta.env;
+
   const opts = {
     options: { debug: false },
     identity: {
-      username: import.meta.env.VITE_APP_USERNAME,
-      password: import.meta.env.VITE_APP_PASSWORD,
+      username: VITE_APP_USERNAME,
+      password: VITE_APP_PASSWORD,
     },
-    channels: [import.meta.env.VITE_APP_CHANNELS],
+    channels: [VITE_APP_CHANNELS],
   };
 
   const new_client_twitch = new tmi.Client(opts);

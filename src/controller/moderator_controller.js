@@ -1,18 +1,16 @@
 export const setupModeration = (Twitch_client) => {
-  if (!Twitch_client) return; // Si no hay cliente, salir
+  if (!Twitch_client) return;
 
-  // Función para manejar los mensajes del chat
   const messageHandler = (channel, tags, message, self) => {
-    if (self) return; // Ignorar mensajes del propio bot
-
+    if (self) return;
     if (message.toLowerCase() === "!hello") {
       Twitch_client.say(channel, `@${tags.username}, heya!`);
     }
   };
 
-  Twitch_client.on("message", messageHandler); // ✅ Escuchar mensajes
+  Twitch_client.on("message", messageHandler);
 
   return () => {
-    Twitch_client.removeListener("message", messageHandler); // ✅ Limpiar evento al desmontar
+    Twitch_client.removeListener("message", messageHandler);
   };
 };
