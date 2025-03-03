@@ -1,36 +1,70 @@
 import React, { useEffect, useState } from "react";
 import { formatTime } from "./utils/formatTime";
 
-const Timer = ({ minutes }) => {
-  const [timeLeft, setTimeLeft] = useState(minutes * 60); // Inicializa con el valor pasado
-  const [pomo, setPomo] = useState(0);
+const Timer = ({
+  minutes,
+  setMinutes,
+  pomo,
+  setPomo,
+  totalPomos,
+  autoExecuted,
+  pauseTime,
+  setPauseTime,
+  setProductiveTime,
+}) => {
+  const [timeLeft, setTimeLeft] = useState(minutes * 60);
+  const [currentPhase, setCurrentPhase] = useState("initial");
 
-  const max_pomo = () => setPomo((prevPomo) => prevPomo + 1);
-
-  // Resetea y reinicia el temporizador cuando 'minutes' cambia
   useEffect(() => {
-    setTimeLeft(minutes * 60); // Resetea el temporizador cuando cambian los minutos
+    if (!pauseTime) {
+      startTimer();
+    }
+  }, [pauseTime]);
+
+  const startTimer = () => {
+    if (currentPhase === "initial") {
+      setMinutes(5);
+      setProductiveTime(false);
+      setCurrentPhase("productive");
+    } else if (currentPhase === "productive") {
+      setMinutes(60);
+      setProductiveTime(true);
+      setCurrentPhase("break");
+    } else if (currentPhase === "break") {
+      setMinutes(10);
+      setProductiveTime(false);
+      setPomo((prevPomo) =>
+        prevPomo + 1 >= totalPomos ? prevPomo : prevPomo + 1
+      );
+      if (pomo >= totalPomos) return;
+      setCurrentPhase("productive");
+    }
+  };
+
+  useEffect(() => {
+    setTimeLeft(minutes * 60);
   }, [minutes]);
 
-  // Manejo del temporizador: inicia solo si timeLeft > 0
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || pauseTime) return;
 
     const interval = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(interval);
-          max_pomo(); // Detener el intervalo al llegar a 0
+          if (autoExecuted) {
+            startTimer();
+          } else {
+            setPauseTime(true);
+          }
           return 0;
         }
         return prevTime - 1;
       });
-    }, 1000);
+    }, 100);
 
-    return () => clearInterval(interval); // Limpiar intervalo cuando se detenga o se reinicie
-  }, [timeLeft]); // Solo se activa cuando timeLeft cambia
-
-  console.log(`Este es el pomo actual: ${pomo}`);
+    return () => clearInterval(interval);
+  }, [timeLeft, pauseTime]);
 
   return <div>Tiempo restante: {formatTime(timeLeft)}</div>;
 };

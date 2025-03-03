@@ -5,19 +5,45 @@ import { setupModeration } from "./controller/moderator_controller";
 
 const App = () => {
   const [minutes, setMinutes] = useState(0);
+  const [pomo, setPomo] = useState(0);
+  const [autoExecuted, setAutoExecuted] = useState(true);
+  const [pauseTime, setPauseTime] = useState(true);
+  const [totalPomos, setTotalPomos] = useState(13);
+  const [productiveTime, setProductiveTime] = useState(false);
 
   useEffect(() => {
     const client = twitch_controller();
-    const cleanup = setupModeration(client, setMinutes);
-    console.log("Estoy en timer App");
+    const cleanup = setupModeration(
+      client,
+      setMinutes,
+      pomo,
+      setPomo,
+      totalPomos,
+      setTotalPomos,
+      setPauseTime,
+      setAutoExecuted,
+      setProductiveTime
+    );
 
     return () => {
       if (cleanup) cleanup();
       if (client) client.disconnect();
     };
-  }, []); // solo se ejecuta una vez al montarse
+  }, []);
 
-  return <Timer minutes={minutes} />;
+  return (
+    <Timer
+      minutes={minutes}
+      setMinutes={setMinutes}
+      pomo={pomo}
+      setPomo={setPomo}
+      totalPomos={totalPomos}
+      autoExecuted={autoExecuted}
+      pauseTime={pauseTime}
+      setPauseTime={setPauseTime}
+      setProductiveTime={setProductiveTime}
+    />
+  );
 };
 
 export default App;

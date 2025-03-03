@@ -1,27 +1,50 @@
-export const setupModeration = (Twitch_client, setMinutes) => {
+export const setupModeration = (
+  Twitch_client,
+  setMinutes,
+  pomo,
+  setPomo,
+  totalPomos,
+  setTotalPomos,
+  setPauseTime,
+  setAutoExecuted,
+  setProductiveTime
+) => {
   if (!Twitch_client || !Twitch_client.on) return;
 
   const messageHandler = (channel, tags, message, self) => {
+    if (self) return;
+
     const args = message.slice(1).split(" ");
     const command = args.shift().toLowerCase();
-    const username = tags.username;
-    const mod = tags?.mod;
     const num = parseInt(args);
-
-    console.log(`Argumento: ${args}
-    comando: ${command}
-    username: ${username}
-    mod: ${mod}
-    num: ${num}`);
 
     switch (command) {
       case "start":
-      case "init":
-      case "play":
+        console.log("⏳ Iniciando temporizador");
+        setPauseTime(false);
+        break;
+      case "min":
         if (!isNaN(num)) {
           setMinutes(num);
         }
         break;
+      case "pomo":
+        setPomo(num);
+        break;
+      case "pomot":
+        setTotalPomos(num);
+        break;
+      case "pause":
+        setPauseTime(true);
+        break;
+      case "auto":
+        setAutoExecuted(true);
+        break;
+      case "manual":
+        setAutoExecuted(false);
+        break;
+      default:
+        console.log(`⚠️ Comando desconocido: ${command}`);
     }
   };
 
