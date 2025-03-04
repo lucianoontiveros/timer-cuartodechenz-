@@ -10,43 +10,43 @@ const Timer = ({
   autoExecuted,
   pauseTime,
   setPauseTime,
+  productiveTime,
   setProductiveTime,
 }) => {
   const [timeLeft, setTimeLeft] = useState(minutes * 60);
   const [currentPhase, setCurrentPhase] = useState("initial");
-
-  useEffect(() => {
-    if (!pauseTime) {
-      startTimer();
-    }
-  }, [pauseTime]);
-
-  const startTimer = () => {
-    if (currentPhase === "initial") {
-      setMinutes(5);
-      setProductiveTime(false);
-      setCurrentPhase("productive");
-    } else if (currentPhase === "productive") {
-      setMinutes(60);
-      setProductiveTime(true);
-      setCurrentPhase("break");
-    } else if (currentPhase === "break") {
-      setMinutes(10);
-      setProductiveTime(false);
-      setPomo((prevPomo) =>
-        prevPomo + 1 >= totalPomos ? prevPomo : prevPomo + 1
-      );
-      if (pomo >= totalPomos) return;
-      setCurrentPhase("productive");
-    }
-  };
+  const [timeLabel, setTimeLabel] = useState("Iniciando");
 
   useEffect(() => {
     setTimeLeft(minutes * 60);
   }, [minutes]);
 
   useEffect(() => {
-    if (timeLeft <= 0 || pauseTime) return;
+    if (!pauseTime && pomo <= totalPomos) {
+      startTimer();
+    }
+  }, [pauseTime]);
+
+  useEffect(() => {
+    if (productiveTime) {
+      const endTimer = pomo + 1;
+      if (totalPomos < endTimer) {
+        setTimeLabel("Hemos terminado");
+        setMinutes(0);
+        setPauseTime(true);
+        setCurrentPhase("Iniciando");
+        return;
+      }
+      setPomo((prevPomo) => {
+        const newPomo = prevPomo + 1;
+        console.log(newPomo);
+        return newPomo;
+      });
+    }
+  }, [productiveTime]);
+
+  useEffect(() => {
+    if (timeLeft <= 0 || pauseTime || pomo > totalPomos) return;
 
     const interval = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -61,12 +61,55 @@ const Timer = ({
         }
         return prevTime - 1;
       });
-    }, 100);
+    }, 100); // Intervalo real de 1 segundo
 
     return () => clearInterval(interval);
-  }, [timeLeft, pauseTime]);
+  }, [timeLeft, pauseTime, pomo]);
 
-  return <div>Tiempo restante: {formatTime(timeLeft)}</div>;
+  const startTimer = () => {
+    if (pomo > totalPomos) {
+      setTimeLabel("Hemos terminado");
+      return;
+    }
+
+    switch (currentPhase) {
+      case "initial":
+        setMinutes(2);
+        setCurrentPhase("productive");
+        setTimeLabel("Estamos iniciando");
+        console.log("Iniciando");
+        break;
+
+      case "productive":
+        setMinutes(3);
+        setCurrentPhase("break");
+        setTimeLabel("Tiempo productivo");
+        setProductiveTime(true);
+        console.log("productive");
+        break;
+
+      case "break":
+        setMinutes(2);
+        setCurrentPhase("productive");
+        setTimeLabel("Tiempo de descanso");
+        setProductiveTime(false);
+        console.log("break");
+
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  return (
+    <>
+      <div>Tiempo restante: {formatTime(timeLeft)}</div>
+      <div>{timeLabel}</div>
+      <div>Pomo {pomo}</div>
+      <div>Total Pomos {totalPomos}</div>
+    </>
+  );
 };
 
 export default Timer;

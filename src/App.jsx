@@ -8,7 +8,7 @@ const App = () => {
   const [pomo, setPomo] = useState(0);
   const [autoExecuted, setAutoExecuted] = useState(true);
   const [pauseTime, setPauseTime] = useState(true);
-  const [totalPomos, setTotalPomos] = useState(13);
+  const [totalPomos, setTotalPomos] = useState(2);
   const [productiveTime, setProductiveTime] = useState(false);
 
   useEffect(() => {
@@ -41,6 +41,7 @@ const App = () => {
       autoExecuted={autoExecuted}
       pauseTime={pauseTime}
       setPauseTime={setPauseTime}
+      productiveTime={productiveTime}
       setProductiveTime={setProductiveTime}
     />
   );
