@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { formatTime } from "./utils/formatTime";
 
 const Timer = ({
@@ -12,10 +12,14 @@ const Timer = ({
   setPauseTime,
   productiveTime,
   setProductiveTime,
+  pauseOn,
+  setPauseOn,
 }) => {
   const [timeLeft, setTimeLeft] = useState(minutes * 60);
   const [currentPhase, setCurrentPhase] = useState("initial");
   const [timeLabel, setTimeLabel] = useState("Iniciando");
+  const [addTime, setTime] = useState(0);
+  const prevPhaseRef = useRef(null);
 
   useEffect(() => {
     setTimeLeft(minutes * 60);
@@ -26,6 +30,13 @@ const Timer = ({
       startTimer();
     }
   }, [pauseTime]);
+
+  useEffect(() => {
+    if (pauseOn) {
+      setPauseTime(true);
+      setCurrentPhase("paused");
+    }
+  }, [pauseOn]);
 
   useEffect(() => {
     if (productiveTime) {
@@ -72,6 +83,7 @@ const Timer = ({
       return;
     }
 
+    prevPhaseRef.current = currentPhase;
     switch (currentPhase) {
       case "initial":
         setMinutes(2);
@@ -96,7 +108,16 @@ const Timer = ({
         console.log("break");
 
         break;
+      case "paused":
+        setPauseOn(false);
+        setMinutes(3);
+        setCurrentPhase("break");
+        setTimeLabel("Tiempo productivo");
+        setProductiveTime(true);
+        console.log("productive");
 
+        console.log(prevPhaseRef.current);
+        break;
       default:
         break;
     }
