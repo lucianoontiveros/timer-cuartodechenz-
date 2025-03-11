@@ -1,0 +1,71 @@
+.consola {
+  background-color: black;
+  color: rgba(14, 242, 223, 0.989);
+  font-family: monospace;
+  border-radius: 8px;
+  border: 2px solid rgb(179, 229, 179);
+  border-radius: 1em;
+  max-width: 300px;
+  box-shadow: 0 4px 6px rgba(14, 242, 223, 0.989);
+  display: grid;
+  grid-template-rows: 20% 1fr;
+  gap: 10px;
+}
+
+.consola_bar {
+  padding: 0 1em;
+  display: flex;
+  border-radius: 1em 1em 0 0;
+  flex-direction: row;
+  justify-content: space-between;
+  border-bottom: solid 0.1em;
+}
+
+.consola_bar_item {
+  display: flex;
+  flex-direction: row;
+}
+
+.consola_bar_item p {
+  margin-left: 1em;
+}
+
+.consola_bar_label {
+  font-size: 1em;
+}
+
+.consola_panel {
+  padding: 0 1em;
+}
+
+.consola_counters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.consola_counters_timer {
+  margin: 0;
+  font-size: 5em;
+}
+
+.consola_counters_pomos {
+  display: flex;
+  height: 2.5em;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 0;
+}
+
+.consola_counters_num {
+  font-size: 3em;
+}
+
+.consola_counters_label {
+  margin-left: 1em;
+  color: black;
+  padding: 0.5em;
+  background-color: rgba(14, 242, 223, 0.989);
+  border-radius: 2em;
+}

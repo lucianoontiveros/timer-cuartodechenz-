@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { twitch_controller } from "./Controller/Twitch_controller";
+import "./index.css";
 
 const App = () => {
   const [timeLeft, setTimeLeft] = useState(1 * 60); // Inicialmente 2 minutos (fase de trabajo)
@@ -65,7 +66,6 @@ const App = () => {
 
   const verifyMode = () => {
     // Si estamos en modo automático, continuamos con la siguiente fase
-
     if (mode === "auto") {
       setIsRunning(true); // Reanudar el temporizador automáticamente
     } else {
@@ -157,17 +157,35 @@ const App = () => {
   }, []); // Este useEffect solo se ejecuta una vez al principio
 
   return (
-    <div>
-      <h1>Pomodoro Timer</h1>
-      <p>Fase: {phase}</p>
-      <p>
-        Tiempo restante: {Math.floor(timeLeft / 60)}:
-        {(timeLeft % 60).toString().padStart(2, "0")}
-      </p>
-      <p>
-        Pomodoros Completados: {pomodorosCompleted} / {totalPomodoros}
-      </p>
-      <p>Modo: {mode}</p> {/* Aquí se muestra el modo actual */}
+    <div className="consola">
+      <div className="consola_bar">
+        <div className="consola_bar_title">
+          <p className="consola_bar_label">
+            {`>`} {phase}
+          </p>
+        </div>
+        <div className="consola_bar_item">
+          <p>_</p>
+          <p>■</p>
+          <p>x</p>
+        </div>
+      </div>
+      <div className="consola_panel">
+        <div className="consola_counters">
+          <div className="consola_counters_pomos">
+            <p className="consola_counters_num">
+              {pomodorosCompleted}/{totalPomodoros}
+            </p>
+            <p className="consola_counters_label">{mode}</p>
+          </div>
+          <p className="consola_counters_timer">
+            {Math.floor(timeLeft / 60)}:
+            {(timeLeft % 60).toString().padStart(2, "0")}
+          </p>
+        </div>
+        <div></div>
+        {/* Aquí se muestra el modo actual */}
+      </div>
     </div>
   );
 };
