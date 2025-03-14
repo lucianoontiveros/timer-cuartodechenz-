@@ -2,14 +2,19 @@ import React, { useState, useEffect } from "react";
 import { twitch_controller } from "./Controller/Twitch_controller";
 import "./index.css";
 import { formatTime } from './components/utils/formatTime';
+import News from './components/News';
+import Qrcode from './components/Qrcode';
 
 const App = () => {
-    const [timeLeft, setTimeLeft] = useState(1 * 60); // Inicialmente 2 minutos (fase de Estamos trabajando / estudiando)
+    const [timeLeft, setTimeLeft] = useState(1 * 60); // Inicialmente 2 minutos (fase de Estamos trabajando /estudiando)
     const [isRunning, setIsRunning] = useState(false); // Para controlar si el temporizador está en marcha
-    const [phase, setPhase] = useState("Iniciando el pomo"); // Fase actual (Iniciando el pomo, Estamos trabajando / estudiando, Por iniciar el pomo, Final de los )
+    const [phase, setPhase] = useState("INICIANDO"); // Fase actual (INICIANDO, Estamos trabajando /estudiando, 🍵En descanso🍙, Final de los )
     const [pomodorosCompleted, setPomodorosCompleted] = useState(1); // Contador de pomodoros completados
     const [totalPomodoros, setTotalPomodoros] = useState(4); // Total de pomodoros que se desean completar
     const [mode, setMode] = useState("auto"); // Modo actual: "auto" o "manual"
+    const [backgroundImage, setBackgroundImage] = useState("descanso");
+    const [aviso, setAviso] = useState('');
+    const [qrValue, setQrValue] = useState('');
 
     // Lógica del temporizador
     useEffect(() => {
@@ -33,18 +38,20 @@ const App = () => {
     const handlePhaseSwitch = () => {
         verifyMode();
         switch (phase) {
-            case "Iniciando el pomo":
-                setPhase("Estamos trabajando / estudiando");
-                setTimeLeft(2 * 60); // Fase de Estamos trabajando / estudiando dura 2 minutos
+            case "INICIANDO":
+                setPhase("💻PRODUCTIVO📋");
+                setTimeLeft(2 * 60); // Fase de Estamos trabajando /estudiando dura 2 minutos
+                setBackgroundImage("productivo");
                 break;
 
-            case "Estamos trabajando / estudiando":
+            case "💻PRODUCTIVO📋":
                 setPomodorosCompleted((prev) => {
                     const newCount = prev + 1;
-                    setPhase("Por iniciar el pomo");
-                    setTimeLeft(1 * 60); // Fase de Por iniciar el pomo dura 1 minuto
+                    setPhase("🍵DESCANSO🍙");
+                    setTimeLeft(1 * 60); // Fase de 🍵En descanso🍙 dura 1 minuto
+                    setBackgroundImage("descanso");
                     if (newCount > totalPomodoros) {
-                        setPhase("Final de los ");
+                        setPhase("🌳HEMOS TERMINADO🌳");
                         setIsRunning(false);
                         return prev;
                     }
@@ -52,14 +59,16 @@ const App = () => {
                 });
                 break;
 
-            case "Por iniciar el pomo":
-                setPhase("Estamos trabajando / estudiando");
+            case "🍵DESCANSO🍙":
+                setPhase("💻PRODUCTIVO📋");
                 setTimeLeft(2 * 60);
+                setBackgroundImage("productivo");
                 break;
 
-            case "Final de los ":
+            case "🌳HEMOS TERMINADO🌳":
                 setIsRunning(false);
-                setTimeLeft(0); // Fase de Estamos trabajando / estudiando dura 2 minutos
+                setTimeLeft(0); // Fase de Estamos trabajando /estudiando dura 2 minutos
+                setBackgroundImage("descanso");
 
                 break;
         }
@@ -76,17 +85,17 @@ const App = () => {
 
     // Iniciar el temporizador
     const startTimer = () => {
-        if (mode === "manual" && phase === "Iniciando el pomo" && timeLeft > 0) {
+        if (mode === "manual" && phase === "INICIANDO" && timeLeft > 0) {
             // Solo empezar en modo manual si el temporizador está pausado
             return setIsRunning(false);
         }
 
-        if (mode === "manual" && phase === "Por iniciar el pomo" && timeLeft > 0) {
+        if (mode === "manual" && phase === "🍵DESCANSO🍙" && timeLeft > 0) {
             // Solo empezar en modo manual si el temporizador está pausado
             return setIsRunning(false);
         }
 
-        if (mode === "manual" && phase === "Estamos trabajando / estudiando" && timeLeft > 0) {
+        if (mode === "manual" && phase === "💻PRODUCTIVO📋" && timeLeft > 0) {
             // Solo empezar en modo manual si el temporizador está pausado
             setIsRunning(false);
         } else {
@@ -149,7 +158,16 @@ const App = () => {
                     });
                     break;
                 case "!reset":
-                    setPhase("Estamos trabajando / estudiando");
+                    setPhase("💻PRODUCTIVO📋");
+                    break;
+                case "!aviso":
+                    const message = args.slice(1).join(' ');
+                    console.log('Aviso actualizado:', message);
+                    setAviso(message);
+                    break;
+                case "!codigo":
+                    const token = args.slice(1).join(' ');
+                    setQrValue(token);
                     break;
                 default:
                     break;
@@ -158,14 +176,19 @@ const App = () => {
     }, []); // Este useEffect solo se ejecuta una vez al principio
 
     return (
-        <div className="consola">
-            <div className="div1"> </div>
-            <div className="div2"></div>
-            <div className="div3"><h1>{formatTime(timeLeft)}</h1></div>
-            <div className="div4"><p className="blink">{`>`}</p><h5>{phase}  {pomodorosCompleted} </h5></div>
-            <div className="div5"><h4>{pomodorosCompleted}/{totalPomodoros}</h4></div>
-            <div className="div6"><h2>{mode}</h2></div>
-            <div className="div7"> </div>
+        <div>
+            <Qrcode token={qrValue} />
+            <News message={aviso} />
+            <div className={`consola ${backgroundImage}`}>
+                <div className="div1"> </div>
+                <div className="div2"></div>
+                <div className="div3"><h1>{formatTime(timeLeft)}</h1></div>
+                <div className="div4"><p className="blink">{`>`}</p><h5>{phase}</h5></div>
+                <div className="div5"><h2>{mode}</h2></div>
+                <div className="div6"><h4>{pomodorosCompleted}/{totalPomodoros}</h4></div>
+                <div className="div7"> </div>
+           
+            </div>
         </div>
     );
 };

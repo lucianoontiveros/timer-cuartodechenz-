@@ -1,7 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap');
 
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: 'Sawarabi Gothic', sans-serif;
+    display: flex;
+    flex-direction: rowreverse;
+    align-items: flex-end;
+
 }
 
 @keyframes brillo {
@@ -24,27 +33,42 @@ body {
     50% { opacity: 0; }
 }
 
-.consola {
+.consola{
+  display: grid;
+  grid-template-columns: 2% 1fr 20% 2%;
+  grid-template-rows: 1fr 30%;
+  grid-column-gap: 0em;
+  grid-row-gap: 0em;
+  color: rgba(14, 242, 223, 0.989);
+}
+
+.productivo {
   background-image: url('/img/fondo_consola.jpeg');
   background-size: cover;
   background-position: top;
   font-family: monospace;
-  border-radius: 8px;
-  border-radius: 1em;
-  max-height: 200px;
-  max-width: 400px;
-  box-shadow: 0 4px 6px rgba(14, 242, 223, 0.989);
-  display: grid;
-  grid-template-columns: 10% 1fr 20% 10%;
-  grid-template-rows: 1fr 30%;
-  grid-column-gap: 0px;
-  grid-row-gap: 0px;
-  color: rgba(14, 242, 223, 0.989);
+  border-radius: 0.8em;
+  max-height: 20em;
+  max-width: 40em;
+  box-shadow: 0 0.4em 0.6em rgba(14, 242, 223, 0.989);
+  padding: 0.5em;
+}
+
+.descanso {
+  background-image: url('/img/fondo_consola_.jpeg');
+  background-size: cover;
+  background-position: top;
+  font-family: monospace;
+  border-radius: 0.8em;
+  max-height: 20em;
+  max-width: 40em;
+  color: rgba(6, 224, 240, 0.989); 
+  box-shadow: 0 0.4em 0.6em rgba(6, 224, 240, 0.989); 
   padding: 0.5em;
 }
 
 .div1 { 
-  grid-area: 3 / 1 / 4 / 3; 
+  grid-area: 3 / 1 / 4 / 3;
 }
 
 .div2 { 
@@ -72,26 +96,28 @@ body {
 .div5 { 
   margin-left: 1em;
   grid-area: 1 / 3 / 2 / 4; 
+  animation: brillo 1.5s infinite;
+
 
 }
 
-.div5 h4 {
-  font-size: 2em;
+.div5 h2 {
+  background-color: rgba(14, 242, 223, 0.989);
+  padding: 0.5em;
+  border-radius: 1em;
+  color: black;
+  font-size: 1.4em;
 
 }
 
 .div6 { 
   grid-area: 2 / 3 / 3 / 4; 
   margin-left: 1em;
-  animation: brillo 1.5s infinite;
 }
 
-.div6 h2 {
-  background-color: rgba(14, 242, 223, 0.989);
-  padding: 0.5em;
-  border-radius: 1em;
-  color: black;
-  font-size: 1em;
+.div6 h4 {
+  font-size: 2.5em;
+
 }
 
 .div7 { 
@@ -118,5 +144,9 @@ h5 {
 
 .blink {
   color: black;
-    animation: parpadeo 1s infinite;
+  animation: parpadeo 1s infinite;
+}
+
+#root {
+    flex: 1; /* Asegurarse de que el contenedor principal ocupe el espacio disponible */
 }

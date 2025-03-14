@@ -1,0 +1,41 @@
+.message-container {
+    background-color: black;
+    max-height: 20em;
+    max-width: 32.1em;
+    border-radius: 0.5em;
+    overflow-y: auto; /* Permitir desplazamiento vertical */
+    position: relative;
+    display: flex;
+    align-items: flex-start; /* Alinear al inicio */
+    justify-content: center;
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+}
+
+.message {
+    font-family: 'Sawarabi Gothic', sans-serif;
+    color: rgba(14, 242, 223, 0.989);
+    text-align: start ;
+    white-space: normal; /* Permitir que el texto se ajuste */
+    overflow-wrap: break-word; /* Romper palabras largas si es necesario */
+    animation: typing 0.05s steps(40, end);
+}
+
+.hidden {
+    display: none;
+}
+
+.blinking {
+    animation: blink 1s infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
