@@ -21,7 +21,7 @@ const Qrcode = ({ token }) => {
                 setIsVisible(true);
                 setTimeout(() => {
                     setIsVisible(false);
-                }, 8000); // Ocultar después de 8 segundos
+                }, 480000); 
             });
         }
     }, [token]);
@@ -30,7 +30,7 @@ const Qrcode = ({ token }) => {
         <div className="qrcode" style={{ display: isVisible ? 'block' : 'none', textAlign: 'center' }}>
             {qrCodeUrl && <img src={qrCodeUrl} alt="QR Code" style={{ display: 'block', margin: '0 auto' }} />}
             <div className="qr-token">
-                <p>CÓDIGO: {token.toUpperCase()}</p>
+                <p>🌳CÓDIGO: {token.toUpperCase()}</p>
             </div>
         </div>
     );

@@ -14,7 +14,7 @@
 
 .message {
     font-family: 'Sawarabi Gothic', sans-serif;
-    color: rgba(14, 242, 223, 0.989);
+    color: rgba(226, 238, 237, 0.989);
     text-align: start ;
     white-space: normal; /* Permitir que el texto se ajuste */
     overflow-wrap: break-word; /* Romper palabras largas si es necesario */

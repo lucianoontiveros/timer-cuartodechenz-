@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { twitch_controller } from "./Controller/Twitch_controller";
+import { enviarMensaje } from './controller/controller_mensajes';
 import "./index.css";
 import { formatTime } from './components/utils/formatTime';
 import News from './components/News';
 import Qrcode from './components/Qrcode';
+import campana from './components/utils/campana.mp3';
 
 const App = () => {
-    const [timeLeft, setTimeLeft] = useState(1 * 60); // Inicialmente 2 minutos (fase de Estamos trabajando /estudiando)
+    const [timeLeft, setTimeLeft] = useState(10 * 60); // Inicialmente 10 minutos (fase de Estamos trabajando /estudiando)
     const [isRunning, setIsRunning] = useState(false); // Para controlar si el temporizador está en marcha
     const [phase, setPhase] = useState("INICIANDO"); // Fase actual (INICIANDO, Estamos trabajando /estudiando, 🍵En descanso🍙, Final de los )
     const [pomodorosCompleted, setPomodorosCompleted] = useState(1); // Contador de pomodoros completados
@@ -15,23 +17,27 @@ const App = () => {
     const [backgroundImage, setBackgroundImage] = useState("descanso");
     const [aviso, setAviso] = useState('');
     const [qrValue, setQrValue] = useState('');
+    const qrValueRef = useRef(''); // Usamos useRef para almacenar el código QR
+    const Client = useRef(null);
+    const audio = new Audio(campana);
+
 
     // Lógica del temporizador
     useEffect(() => {
         if (!isRunning) return; // Si el temporizador no está corriendo, no hacer nada
-
+        enviarMensaje(phase, pomodorosCompleted, sendMessage);
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
                     handlePhaseSwitch();
+                    
                     return 0;
                 }
                 return prev - 1;
             });
-        }, 100);
-
-        return () => clearInterval(timer); // Limpiar el temporizador al desmontar el componente
+        }, 1000);
+        return () => {   clearInterval(timer); } // Limpiar el temporizador al desmontar el componente
     }, [isRunning, phase]); // Se ejecuta cada vez que el estado `isRunning` o `phase` cambian
 
     // Cambiar de fase y manejar las transiciones
@@ -39,19 +45,22 @@ const App = () => {
         verifyMode();
         switch (phase) {
             case "INICIANDO":
+                audio.play();
                 setPhase("💻PRODUCTIVO📋");
-                setTimeLeft(2 * 60); // Fase de Estamos trabajando /estudiando dura 2 minutos
+                setTimeLeft(10 * 60); // Fase de Estamos trabajando /estudiando dura 2 minutos
                 setBackgroundImage("productivo");
                 break;
 
             case "💻PRODUCTIVO📋":
+                audio.play();
                 setPomodorosCompleted((prev) => {
                     const newCount = prev + 1;
-                    setPhase("🍵DESCANSO🍙");
-                    setTimeLeft(1 * 60); // Fase de 🍵En descanso🍙 dura 1 minuto
+                        setPhase("🍵DESCANSO🍙");
+                    setTimeLeft(60 * 60); // Fase de 🍵En descanso🍙 dura 1 minuto
                     setBackgroundImage("descanso");
                     if (newCount > totalPomodoros) {
                         setPhase("🌳HEMOS TERMINADO🌳");
+                        enviarMensaje("🌳HEMOS TERMINADO🌳", pomodorosCompleted, sendMessage);
                         setIsRunning(false);
                         return prev;
                     }
@@ -60,16 +69,17 @@ const App = () => {
                 break;
 
             case "🍵DESCANSO🍙":
+                audio.play();
                 setPhase("💻PRODUCTIVO📋");
-                setTimeLeft(2 * 60);
+                setTimeLeft(10 * 60);
                 setBackgroundImage("productivo");
                 break;
 
             case "🌳HEMOS TERMINADO🌳":
+                audio.play();
                 setIsRunning(false);
                 setTimeLeft(0); // Fase de Estamos trabajando /estudiando dura 2 minutos
                 setBackgroundImage("descanso");
-
                 break;
         }
     };
@@ -117,16 +127,29 @@ const App = () => {
     // Ajustar el número total de pomodoros
     const setTotalPomodorosCount = (count) => setTotalPomodoros(count);
 
+    const sendMessage = (channel, message) => Client.current.say(channel, `/me ${message}`);
+    
+
     // Controlador de Twitch
     useEffect(() => {
-        const Client = twitch_controller();
+        Client.current = twitch_controller();
+        Client.current.on("message", (channel, tags, message, self) => {
 
-        Client.on("message", (channel, tags, message, self) => {
             if (self) return; // Ignorar mensajes del propio bot
-
             const args = message.split(" ");
             const command = args[0].toLowerCase();
-
+            if (command === "!sala") {
+                if (qrValueRef.current) {
+                    sendMessage("brunispet", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://www.forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
+                } else {
+                    sendMessage("brunispet", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
+                }
+                return;
+            }
+            if (tags.username !== "cuartodechenz" && !tags.mod) {
+                return; // Ignorar comandos si el usuario no es "cuartodechenz" y no es un moderador
+            }
+           
             switch (command) {
                 case "!start":
                     startTimer();
@@ -167,6 +190,7 @@ const App = () => {
                     break;
                 case "!codigo":
                     const token = args.slice(1).join(' ');
+                    qrValueRef.current = token;
                     setQrValue(token);
                     break;
                 default:

@@ -39,7 +39,7 @@ body {
   grid-template-rows: 1fr 30%;
   grid-column-gap: 0em;
   grid-row-gap: 0em;
-  color: rgba(14, 242, 223, 0.989);
+  color: rgba(226, 238, 237, 0.989);
 }
 
 .productivo {
@@ -55,14 +55,14 @@ body {
 }
 
 .descanso {
-  background-image: url('/img/fondo_consola_.jpeg');
+  background-image: url('/img/prueba.png');
   background-size: cover;
   background-position: top;
   font-family: monospace;
   border-radius: 0.8em;
   max-height: 20em;
   max-width: 40em;
-  color: rgba(6, 224, 240, 0.989); 
+  color: rgba(226, 238, 237, 0.989);
   box-shadow: 0 0.4em 0.6em rgba(6, 224, 240, 0.989); 
   padding: 0.5em;
 }
@@ -81,14 +81,16 @@ body {
 }
 
 .div4 { 
-  background-color: rgba(14, 242, 223, 0.989);
+  background-color: black;
+  box-shadow: 0 0.4em 0.6em rgba(14, 242, 223, 0.989);
   border-radius: 1em;
   grid-area: 2 / 2 / 3 / 3; 
 }
 
 .div4 h5 {
   margin-left: 0.1em;
-  color: black;
+  color: rgba(226, 238, 237, 0.989);
+
   padding: 0.5em;
   font-size: 1.2em;
 }
@@ -99,13 +101,15 @@ body {
   animation: brillo 1.5s infinite;
 
 
+
 }
 
 .div5 h2 {
-  background-color: rgba(14, 242, 223, 0.989);
+  background-color: black;
+  box-shadow: 0 0.4em 0.6em rgba(14, 242, 223, 0.989);
   padding: 0.5em;
   border-radius: 1em;
-  color: black;
+  color: rgba(226, 238, 237, 0.989);
   font-size: 1.4em;
 
 }
