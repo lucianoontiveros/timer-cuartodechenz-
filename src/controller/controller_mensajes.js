@@ -19,5 +19,5 @@ export const enviarMensaje = (message, pomodorosCompleted, sendMessage) => {
             mensaje = "Ups, parece que algo no ha salido bien. 🤔 No reconozco este mensaje, pero todo está bajo control. ¡Nos vemos en breve!";
             break;
     }
-    sendMessage("brunispet", mensaje);
+    sendMessage("cuartodechenz", mensaje);
 };

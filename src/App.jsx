@@ -140,9 +140,9 @@ const App = () => {
             const command = args[0].toLowerCase();
             if (command === "!sala") {
                 if (qrValueRef.current) {
-                    sendMessage("brunispet", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://www.forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
+                    sendMessage("cuartodechenz", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://www.forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
                 } else {
-                    sendMessage("brunispet", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
+                    sendMessage("cuartodechenz", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
                 }
                 return;
             }
