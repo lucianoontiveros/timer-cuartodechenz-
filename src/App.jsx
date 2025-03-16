@@ -20,8 +20,14 @@ const App = () => {
     const qrValueRef = useRef(''); // Usamos useRef para almacenar el código QR
     const Client = useRef(null);
     const audio = new Audio(campana);
+    const usersActivities = []
 
-
+class FirstActivity {
+    constructor(username, estado) {
+        this.username = username;
+        this.estado = estado;
+    }
+}
     // Lógica del temporizador
     useEffect(() => {
         if (!isRunning) return; // Si el temporizador no está corriendo, no hacer nada
@@ -135,10 +141,40 @@ const App = () => {
         Client.current = twitch_controller();
         Client.current.on("message", (channel, tags, message, self) => {
 
+
             if (self) return; // Ignorar mensajes del propio bot
             const args = message.split(" ");
             const command = args[0].toLowerCase();
-            if (command === "!sala") {
+            const username = tags.username;
+            const isSub = tags.badges?.subscriber
+            const isPrime = tags.badges?.premium
+            const isVip = tags.badges?.vip
+            const isMod = tags.badges?.moderator
+          
+            const mensajeGeneral = `¡Qué alegría verte por aquí, ${username}! Espero que tengas una jornada productiva. 📚✨`;  
+            const mensajeSubs = isSub  
+                ? `👑 ¡Mil gracias por apoyar este canal! Gracias a ti, las croquetas para mí y los michis están aseguradas. 🐱💕`  
+                : `Espero que tengas una excelente sesión de estudio. ¡Mucho ánimo! 💪📖`;  
+            const mensajeMod = isMod  
+                ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨`  
+                : '';  
+            const mensajeVid = isVip  
+                ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟`  
+                : ''; 
+            const buscandoActividad = () => usersActivities.find((items) => items.username === username)
+            if (!buscandoActividad()) {
+                let estado = 'Acaba de ingresar al chat 📱';
+                let firstActivity = new FirstActivity(username, estado)
+                usersActivities.push(firstActivity)
+                
+                if (username != 'streamlabs' || username != 'brunispet'|| username != 'botomizador' || username != 'streamelements' || username != 'nightbot' || username != 'mohcitrus') {
+                    Client.current.say(channel, mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid)
+                }
+            } 
+
+            if (!message.startsWith('!')) return;
+
+            if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
                 if (qrValueRef.current) {
                     sendMessage("brunispet", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://www.forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
                 } else {
@@ -190,6 +226,10 @@ const App = () => {
                     break;
                 case "!codigo":
                     const token = args.slice(1).join(' ');
+                    if (!token) {
+                        sendMessage("cuartodechenz", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
+                        return;
+                    }
                     qrValueRef.current = token;
                     setQrValue(token);
                     break;
