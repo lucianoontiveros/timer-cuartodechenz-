@@ -73,10 +73,6 @@ Para ejecutar la aplicación, sigue estos pasos:
 3. Instala las dependencias: `npm install`
 4. Inicia la aplicación: `npm start`
 
-# CARACTERÍSTICAS PRINCIPALES
-- [Característica 1]: [Descripción]
-- [Característica 2]: [Descripción]
-- [Característica 3]: [Descripción]
 
 # VINCULACIÓN CON TWITCH
 La aplicación se integra con Twitch para [explica cómo se vincula con Twitch y qué funcionalidades ofrece]. Esto permite a los usuarios [beneficios de la integración].
