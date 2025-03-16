@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { twitch_controller } from "./Controller/Twitch_controller";
+import { twitch_controller } from "./controller/Twitch_controller";
 import { enviarMensaje } from './controller/controller_mensajes';
 import "./index.css";
 import { formatTime } from './components/utils/formatTime';
