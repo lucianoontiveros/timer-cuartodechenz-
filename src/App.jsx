@@ -42,7 +42,7 @@ class FirstActivity {
                 }
                 return prev - 1;
             });
-        }, 1000);
+        }, 100);
         return () => {   clearInterval(timer); } // Limpiar el temporizador al desmontar el componente
     }, [isRunning, phase]); // Se ejecuta cada vez que el estado `isRunning` o `phase` cambian
 
@@ -53,7 +53,7 @@ class FirstActivity {
             case "INICIANDO":
                 audio.play();
                 setPhase("💻PRODUCTIVO📋");
-                setTimeLeft(10 * 60); // Fase de Estamos trabajando /estudiando dura 2 minutos
+                setTimeLeft(60 * 60); // Fase de Estamos trabajando /estudiando dura 2 minutos
                 setBackgroundImage("productivo");
                 break;
 
@@ -62,7 +62,7 @@ class FirstActivity {
                 setPomodorosCompleted((prev) => {
                     const newCount = prev + 1;
                         setPhase("🍵DESCANSO🍙");
-                    setTimeLeft(60 * 60); // Fase de 🍵En descanso🍙 dura 1 minuto
+                    setTimeLeft(10 * 60); // Fase de 🍵En descanso🍙 dura 1 minuto
                     setBackgroundImage("descanso");
                     if (newCount > totalPomodoros) {
                         setPhase("🌳HEMOS TERMINADO🌳");
@@ -77,7 +77,7 @@ class FirstActivity {
             case "🍵DESCANSO🍙":
                 audio.play();
                 setPhase("💻PRODUCTIVO📋");
-                setTimeLeft(10 * 60);
+                setTimeLeft(60 * 60);
                 setBackgroundImage("productivo");
                 break;
 
