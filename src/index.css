@@ -40,6 +40,9 @@ body {
   grid-column-gap: 0em;
   grid-row-gap: 0em;
   color: rgba(226, 238, 237, 0.989);
+  box-shadow: 0 0.4em 0.6em rgba(14, 242, 223, 0.989);
+  margin: 0.5em;
+
 }
 
 .productivo {
@@ -50,7 +53,6 @@ body {
   border-radius: 0.8em;
   max-height: 20em;
   max-width: 40em;
-  box-shadow: 0 0.4em 0.6em rgba(14, 242, 223, 0.989);
   padding: 0.5em;
 }
 
@@ -63,7 +65,6 @@ body {
   max-height: 20em;
   max-width: 40em;
   color: rgba(226, 238, 237, 0.989);
-  box-shadow: 0 0.4em 0.6em rgba(6, 224, 240, 0.989); 
   padding: 0.5em;
 }
 

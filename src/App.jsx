@@ -42,7 +42,7 @@ class FirstActivity {
                 }
                 return prev - 1;
             });
-        }, 100);
+        }, 1000);
         return () => {   clearInterval(timer); } // Limpiar el temporizador al desmontar el componente
     }, [isRunning, phase]); // Se ejecuta cada vez que el estado `isRunning` o `phase` cambian
 
