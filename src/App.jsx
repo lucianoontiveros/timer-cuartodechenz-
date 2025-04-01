@@ -176,7 +176,7 @@ class FirstActivity {
 
             if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
                 if (qrValueRef.current) {
-                    sendMessage("cuartodechenz", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://www.forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
+                    sendMessage("cuartodechenz", `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`);
                 } else {
                     sendMessage("cuartodechenz", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
                 }
