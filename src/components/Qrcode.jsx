@@ -8,7 +8,7 @@ const Qrcode = ({ token }) => {
 
     useEffect(() => {
         if (token) {
-            const link = `https://www.forestapp.cc/join-room/?token=${token}`;
+            const link = `https://forestapp.cc/join-room/?token=${token}`;
             QRCode.toDataURL(link, { 
                 errorCorrectionLevel: 'H', 
                 color: {
