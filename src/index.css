@@ -1,5 +1,43 @@
 @import url("https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap");
 
+/* ============================= */
+/* 🎨 VARIABLES GLOBALES DE TEMA */
+/* ============================= */
+:root {
+  /* Colores principales */
+  --color-texto-principal: rgba(226, 238, 237, 0.989);
+  --color-texto-secundario: rgb(241, 247, 247);
+  --color-fondo-principal: rgb(2, 1, 2);
+  --color-fondo-secundario: rgb(10, 7, 14);
+  --color-fondo-negro: #000000;
+
+  /* Colores de acento */
+  --color-acento: rgba(14, 242, 223, 0.989);
+  --color-acento-suave: rgba(14, 242, 223, 0.7);
+
+  /* Sombras */
+  --sombra-texto-principal: 5px 5px 10px var(--color-fondo-negro);
+  --sombra-texto-secundario: 2px 2px 5px var(--color-fondo-negro);
+  --sombra-borde-acento: 0 0 15px var(--color-acento),
+    0 0 20px rgba(6, 224, 240, 0.989);
+
+  /* Bordes */
+  --borde-acento: var(--color-acento) 5px inset;
+
+  /* Fuentes */
+  --fuente-principal: "Sawarabi Gothic", sans-serif;
+  --fuente-monospace: monospace;
+
+  /* Fondos de imagen */
+  --fondo-productivo: url("/img/kero_produc.png");
+  --fondo-descanso: url("/img/kero_break.png");
+  --fondo-bambu: url("/img/bambus.png");
+}
+
+/* ============================= */
+/* ESTILOS BASE                  */
+/* ============================= */
+
 html,
 body {
   margin: 0;
@@ -10,8 +48,7 @@ body {
 }
 
 .container {
-  font-family: "Sawarabi Gothic", sans-serif;
-  flex-direction: rowreverse;
+  font-family: var(--fuente-principal);
   display: flex;
   flex-direction: column;
   justify-content: end;
@@ -20,11 +57,14 @@ body {
   width: 800px;
 }
 
+/* ============================= */
+/* ELEMENTOS SECCIÓN PRINCIPAL   */
+/* ============================= */
+
 .element_3 {
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   border-radius: 40em;
   display: flex;
-  flex-direction: row;
   justify-content: space-around;
   align-items: center;
   width: 100%;
@@ -36,45 +76,48 @@ body {
 }
 
 .productivo {
-  background-image: url("/img/kero_produc.png");
+  background-image: var(--fondo-productivo);
   height: 220px;
   width: 220px;
   background-size: contain;
   background-repeat: no-repeat;
-  font-family: monospace;
+  font-family: var(--fuente-monospace);
   border-radius: 0.8em;
-  color: rgba(226, 238, 237, 0.989);
+  color: var(--color-texto-principal);
   padding: 0.5em;
 }
 
 .descanso {
-  background-image: url("/img/kero_break.png");
+  background-image: var(--fondo-descanso);
   height: 200px;
   width: 200px;
   background-size: contain;
   background-repeat: no-repeat;
-  font-family: monospace;
+  font-family: var(--fuente-monospace);
   border-radius: 0.8em;
-  color: rgba(226, 238, 237, 0.989);
+  color: var(--color-texto-principal);
   padding: 0.5em;
 }
 
 .elemente_3_b {
-  background-image: url("/img/bambus.png");
+  background-image: var(--fondo-bambu);
   background-position: top;
   border-radius: 1rem;
-  background-color: rgb(2, 1, 2);
+  background-color: var(--color-fondo-principal);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   margin-left: -260px;
-  height: 75%;
+  height: 45%;
   width: 60%;
-  border: rgba(14, 242, 223, 0.989) 5px inset;
-  box-shadow: 0 0 15px rgba(14, 242, 223, 0.989),
-    0 0 20px rgba(6, 224, 240, 0.989);
+  border: var(--borde-acento);
+  box-shadow: var(--sombra-borde-acento);
   animation: pulse 1s infinite alternate;
 }
+
+/* ============================= */
+/* ELEMENTO 4                    */
+/* ============================= */
 
 .element_4 {
   width: 100%;
@@ -86,19 +129,23 @@ body {
 }
 
 .element_4_a {
-  color: rgb(241, 247, 247);
+  color: var(--color-texto-secundario);
   text-align: center;
   font-size: 0.9em;
-  margin-top: -50px;
+  margin-top: -92px;
   margin-left: 60px;
   min-width: 50%;
   min-height: 0.1em;
   max-width: 2em;
-  background-color: rgb(10, 7, 14);
+  background-color: var(--color-fondo-secundario);
   border-radius: 2em;
+    border: var(--borde-acento);
+
 }
 
-/** Elementos  de la seccion timer */
+/* ============================= */
+/* TIMER                         */
+/* ============================= */
 
 .item_timer_1 {
   display: flex;
@@ -110,10 +157,10 @@ body {
 }
 
 .item_timer_1 h1 {
-  color: rgba(226, 238, 237, 0.989);
+  color: var(--color-texto-principal);
   font-size: 90px;
   font-weight: bolder;
-  text-shadow: 5px 5px 10px #000000;
+  text-shadow: var(--sombra-texto-principal);
   text-align: center;
 }
 
@@ -122,47 +169,81 @@ body {
   flex-direction: column;
   justify-content: center;
   align-content: center;
-  padding: 5px 5px 5px 5px;
+  padding: 5px;
   text-align: center;
   width: 25%;
 }
 
 .item_timer_2_a,
 .item_timer_2_b {
-  background: black;
+  background: var(--color-fondo-negro);
   height: 120px;
   margin: 0.5em;
   border-radius: 2em;
   margin-right: -40px;
 }
 
+.item_timer_2_b{
+    box-shadow: var(--sombra-borde-acento);
+  animation: pulse 1s infinite alternate;
+}
+
 .item_timer_2_a h3 {
-  color: rgba(226, 238, 237, 0.989);
+  color: var(--color-texto-principal);
   font-size: 1.2em;
   font-weight: bolder;
   animation: brillo 2s infinite;
 }
 
 .item_timer_2_b h2 {
-  color: rgba(226, 238, 237, 0.989);
+  color: var(--color-texto-principal);
   font-size: 2.2em;
-  font-weight: bolder;
   font-weight: 900;
-  text-shadow: 2px 2px 5px #000000;
+  text-shadow: var(--sombra-texto-secundario);
 }
+
+/* ============================= */
+/* LOCALIZACIÓN                  */
+/* ============================= */
+
+.localization {
+  min-width: 70%;
+  margin-right: -30px;
+  text-align: center;
+  font-family: var(--fuente-principal);
+  color: var(--color-texto-secundario);
+  font-size: 0.9em;
+  text-shadow: var(--sombra-texto-secundario);
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px 0;
+  border-radius: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.localization-text {
+  font-size: 1.5em;
+  display: inline-block;
+  padding: 0 15px;
+}
+
+/* ============================= */
+/* ANIMACIONES                   */
+/* ============================= */
 
 @keyframes brillo {
   0% {
     opacity: 1;
-    color: rgba(14, 242, 223, 0.989);
+    color: var(--color-acento);
   }
   50% {
     opacity: 0.7;
-    color: rgba(14, 242, 223, 0.7);
+    color: var(--color-acento-suave);
   }
   100% {
     opacity: 1;
-    color: rgba(14, 242, 223, 0.989);
+    color: var(--color-acento);
   }
 }
 
@@ -175,6 +256,10 @@ body {
     opacity: 0;
   }
 }
+
+/* ============================= */
+/* CONSOLA Y ROOT                */
+/* ============================= */
 
 .consola-items {
   display: flex;
@@ -191,5 +276,5 @@ body {
 }
 
 #root {
-  flex: 1; /* Asegurarse de que el contenedor principal ocupe el espacio disponible */
+  flex: 1;
 }

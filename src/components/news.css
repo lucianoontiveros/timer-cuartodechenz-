@@ -1,11 +1,28 @@
+/* ===================================== */
+/* 🎨 VARIABLES GLOBALES DE TEMA */
+/* ===================================== */
+:root {
+  --color-fondo-mensaje: #000000;
+  --color-texto-mensaje: rgba(226, 238, 237, 0.989);
+  --color-acento: rgba(14, 242, 223, 0.989);
+  --color-acento-secundario: rgba(6, 224, 240, 0.989);
+
+  --sombra-acento: 0 0 15px var(--color-acento),
+    0 0 20px var(--color-acento-secundario);
+
+  --fuente-principal: "Sawarabi Gothic", sans-serif;
+}
+
+/* ===================================== */
+/* 💬 CONTENEDOR DE MENSAJES */
+/* ===================================== */
 .message-container {
-  background-color: black;
+  background-color: var(--color-fondo-mensaje);
   max-width: 36em;
   border-radius: 1em;
-  box-shadow: 0 0 15px rgba(14, 242, 223, 0.989),
-    0 0 20px rgba(6, 224, 240, 0.989);
+  box-shadow: var(--sombra-acento);
   animation: pulse 1s infinite alternate;
-  overflow-y: auto; /* Permitir desplazamiento vertical */
+  overflow-y: auto; /* Desplazamiento vertical */
   position: relative;
   display: flex;
   align-items: flex-start; /* Alinear al inicio */
@@ -13,19 +30,26 @@
   flex-wrap: wrap;
   margin: 1em;
   padding: 0.5em;
+  margin-left: 2em;
 }
 
+/* ===================================== */
+/* ✉️ MENSAJE INDIVIDUAL */
+/* ===================================== */
 .message {
-  font-family: "Sawarabi Gothic", sans-serif;
-  color: rgba(226, 238, 237, 0.989);
+  font-family: var(--fuente-principal);
+  color: var(--color-texto-mensaje);
   font-size: 25px;
   font-weight: 800;
   text-align: start;
-  white-space: normal; /* Permitir que el texto se ajuste */
-  overflow-wrap: break-word; /* Romper palabras largas si es necesario */
+  white-space: normal; /* Ajustar texto */
+  overflow-wrap: break-word; /* Romper palabras largas */
   animation: typing 0.05s steps(40, end);
 }
 
+/* ===================================== */
+/* ⚙️ ESTADOS Y EFECTOS */
+/* ===================================== */
 .hidden {
   display: none;
 }
@@ -34,6 +58,9 @@
   animation: blink 1s infinite;
 }
 
+/* ===================================== */
+/* ✨ ANIMACIONES */
+/* ===================================== */
 @keyframes typing {
   from {
     width: 0;
@@ -52,5 +79,15 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* (Opcional) Pulso suave para el contenedor */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px var(--color-acento);
+  }
+  100% {
+    box-shadow: 0 0 25px var(--color-acento-secundario);
   }
 }

@@ -17,6 +17,9 @@ const App = () => {
   const [backgroundImage, setBackgroundImage] = useState("descanso");
   const [aviso, setAviso] = useState("");
   const [qrValue, setQrValue] = useState("");
+  const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [location, setLocation] = useState('Córdoba, Argentina');
   const qrValueRef = useRef(""); // Usamos useRef para almacenar el código QR
   const Client = useRef(null);
   const audio = new Audio(campana);
@@ -28,6 +31,29 @@ const App = () => {
       this.estado = estado;
     }
   }
+  // Actualizar fecha y hora cada segundo
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      
+      // Formatear hora
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}:${seconds}`);
+      
+      // Formatear fecha
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      setCurrentDate(now.toLocaleDateString('es-AR', options));
+    };
+    
+    // Actualizar inmediatamente y luego cada segundo
+    updateDateTime();
+    const intervalId = setInterval(updateDateTime, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Lógica del temporizador
   useEffect(() => {
     if (!isRunning) return; // Si el temporizador no está corriendo, no hacer nada
@@ -42,7 +68,7 @@ const App = () => {
         }
         return prev - 1;
       });
-    }, 10);
+    }, 1000);
     return () => {
       clearInterval(timer);
     }; // Limpiar el temporizador al desmontar el componente
@@ -316,6 +342,11 @@ const App = () => {
         <div className="element_4_a">
           <h2> {phase}</h2>
         </div>
+      </div>
+      <div className="localization">
+        <span className="localization-text">
+          {currentDate} | {currentTime} | {location}
+        </span>
       </div>
     </div>
   );
