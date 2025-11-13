@@ -1,41 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap");
+
 .qrcode {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: rgba(14, 242, 223, 0.989);
-    padding: 20px;
+  color: rgba(14, 242, 223, 0.989);
+  padding: 20px;
+  width: 100%;
 }
 
 .qrcode img {
-    background-color: black;
-    margin-bottom: 10px;
-    border-radius: 0.5em;     /* Bordes redondeados */
-    box-shadow: 0 0 15px rgba(14, 242, 223, 0.989), 0 0 20px rgba(6, 224, 240, 0.989);
-    animation: pulse 1s infinite alternate;
+  background-color: black;
+  margin-bottom: 10px;
+  border-radius: 0.5em; /* Bordes redondeados */
+  box-shadow: 0 0 15px rgba(14, 242, 223, 0.989),
+    0 0 20px rgba(6, 224, 240, 0.989);
+  animation: pulse 1s infinite alternate;
 }
 
 @keyframes pulse {
-    0% {
-        box-shadow: 0 0 15px rgba(14, 242, 223, 0.989), 0 0 20px rgba(6, 224, 240, 0.989);
-    }
-    100% {
-        box-shadow: 0 0 25px rgba(14, 242, 223, 0.989), 0 0 30px rgba(6, 224, 240, 0.989);
-    }
+  0% {
+    box-shadow: 0 0 15px rgba(14, 242, 223, 0.989),
+      0 0 20px rgba(6, 224, 240, 0.989);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(14, 242, 223, 0.989),
+      0 0 30px rgba(6, 224, 240, 0.989);
+  }
 }
 
 .qr-token {
-    background-color: black;
-    border-radius: 0.5em;
-    max-height: 1.5em;
-    width: auto;
-    color: rgba(226, 238, 237, 0.989);
-    padding: 0.5em;
-   
-    text-align: center;
-    margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: black;
+  min-height: 2em;
+  max-width: 600px;
+  border-radius: 0.5em;
+  color: rgba(226, 238, 237, 0.989);
+  text-align: center;
+  margin-top: 1em;
 }
 
-.qrcode p {
-    margin: 0;
-    font-size: 1em;
+.codigo {
+  font-family: "Sawarabi Gothic", sans-serif;
+  font-weight: 800;
+  font-size: 30px;
 }
