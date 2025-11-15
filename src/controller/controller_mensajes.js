@@ -15,9 +15,12 @@ export const enviarMensaje = (message, pomodorosCompleted, sendMessage) => {
         case "🌳HEMOS TERMINADO🌳":
             mensaje = `¡Lo logramos! 🎉 Hemos completado todos los pomos y el stream está llegando a su fin. Es momento de relajarnos un poco jugando. Si aún tienes cosas pendientes, ¡no te preocupes! En unos minutos haremos un raid a otro canal de Study With Me para que sigas con tu flujo de estudio. 📚✨`;
             break;
+        case "🌳SE VIENE RAID🌳":
+            mensaje = `Gracias por la compañía, aquí se completó nuestra jornada📚✨`;
+            break;
         default:
             mensaje = "Ups, parece que algo no ha salido bien. 🤔 No reconozco este mensaje, pero todo está bajo control. ¡Nos vemos en breve!";
             break;
     }
-    sendMessage("cuartodechenz", mensaje);
+    sendMessage("brunispet", mensaje);
 };

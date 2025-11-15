@@ -96,7 +96,7 @@ const App = () => {
             setPhase("🌳HEMOS TERMINADO🌳");
             setTimeLeft(10 * 60);
             enviarMensaje(
-              "🌳HEMOS TERMINADO🌳",
+              "🌳SE VIENE RAID🌳",
               pomodorosCompleted,
               sendMessage
             );

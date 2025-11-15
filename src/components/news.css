@@ -18,7 +18,7 @@
 /* ===================================== */
 .message-container {
   background-color: var(--color-fondo-mensaje);
-  max-width: 36em;
+  max-width: 38em;
   border-radius: 1em;
   box-shadow: var(--sombra-acento);
   animation: pulse 1s infinite alternate;
@@ -29,8 +29,9 @@
   justify-content: center;
   flex-wrap: wrap;
   margin: 1em;
-  padding: 0.5em;
-  margin-left: 2em;
+  padding: 0.8em;
+  margin-left: 3.2em;
+  margin-bottom: -1em;
 }
 
 /* ===================================== */
