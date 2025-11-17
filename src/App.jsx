@@ -206,7 +206,7 @@ const App = () => {
       // Solo enviar mensaje de finalización si estamos en la fase de terminado
       // y el temporizador estaba en ejecución
       if (phase === "🌳HEMOS TERMINADO🌳" && wasRunning && Client.current) {
-        Client.current.say('brunispet', '🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!');
+        Client.current.say('cuartodechenz', '🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!');
       }
     }
   }, [timeLeft, handlePhaseSwitch, isRunning, phase]);
@@ -273,7 +273,7 @@ const App = () => {
     if (Client.current) {
       const phaseMessage = phase === "💻PRODUCTIVO📋" ? "fase de PRODUCTIVIDAD" : 
                          phase === "🍵DESCANSO🍙" ? "tiempo de DESCANSO" : "sesión";
-      Client.current.say('brunispet', `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`);
+      Client.current.say('cuartodechenz', `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`);
     }
     
   }, [isRunning, mode, phase, timeLeft, handlePhaseSwitch]);
@@ -296,7 +296,7 @@ const App = () => {
       // Notificar al chat
       if (Client.current) {
         const remainingTime = formatTime(timeLeft);
-        Client.current.say('brunispet', `⏸️ Temporizador pausado con ${remainingTime} restantes. Usa !start para reanudar.`);
+        Client.current.say('cuartodechenz', `⏸️ Temporizador pausado con ${remainingTime} restantes. Usa !start para reanudar.`);
       }
     }
   }, [isRunning, timeLeft]);
@@ -324,9 +324,9 @@ const App = () => {
       const isPrime = tags.badges?.premium;
       const isVip = tags.badges?.vip;
       const isMod = tags.badges?.moderator;
-      // Solo saludar si es la primera vez que vemos a este usuario y no es brunispet ni brunispet
+      // Solo saludar si es la primera vez que vemos a este usuario y no es cuartodechenz ni cuartodechenz
       if (!greetedUsers.current.has(username) && 
-          username.toLowerCase() !== 'brunispet' && 
+          username.toLowerCase() !== 'cuartodechenz' && 
           username.toLowerCase() !== 'brunispet') {
         greetedUsers.current.add(username);
         
@@ -357,21 +357,21 @@ const App = () => {
       ) {
         if (qrValueRef.current) {
           sendMessage(
-            "brunispet",
+            "cuartodechenz",
             `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${
               qrValueRef.current
             } Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
         } else {
           sendMessage(
-            "brunispet",
+            "cuartodechenz",
             "No hay un código configurado. Usa !codigo [token] para establecer uno."
           );
         }
         return;
       }
-      if (tags.username !== "brunispet" && !tags.mod) {
-        return; // Ignorar comandos si el usuario no es "brunispet" y no es un moderador
+      if (tags.username !== "cuartodechenz" && !tags.mod) {
+        return; // Ignorar comandos si el usuario no es "cuartodechenz" y no es un moderador
       }
 
       switch (command) {
@@ -507,7 +507,7 @@ const App = () => {
           const token = args.slice(1).join(" ");
           if (!token) {
             sendMessage(
-              "brunispet",
+              "cuartodechenz",
               "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]"
             );
             return;
