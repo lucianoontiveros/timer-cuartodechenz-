@@ -7,371 +7,358 @@ import News from "./components/News";
 import Qrcode from "./components/Qrcode";
 import campana from "./components/utils/campana.mp3";
 
+// Versión corregida del App.jsx - Comportamiento: Opción A/C combinado según requerimiento
+// Manual: detiene y espera !start
+// Auto: al cambiar a auto NO arranca solo. Tras el primer !start en auto, funciona completamente automático hasta completar el circuito
+
+const DURATIONS = {
+  INICIANDO: 10 * 60,
+  PRODUCTIVO: 60 * 60,
+  DESCANSO: 10 * 60,
+  TERMINADO: 0,
+};
+
 const App = () => {
-  const [timeLeft, setTimeLeft] = useState(10 * 60); // Inicialmente 10 minutos (fase de Estamos trabajando /estudiando)
-  const [isRunning, setIsRunning] = useState(false); // Para controlar si el temporizador está en marcha
-  const [phase, setPhase] = useState("INICIANDO"); // Fase actual (INICIANDO, Estamos trabajando /estudiando, 🍵En descanso🍙, Final de los )
-  const [pomodorosCompleted, setPomodorosCompleted] = useState(1); // Contador de pomodoros completados
-  const [totalPomodoros, setTotalPomodoros] = useState(4); // Total de pomodoros que se desean completar
-  const [mode, setMode] = useState("auto"); // Modo actual: "auto" o "manual"
+  const [timeLeft, setTimeLeft] = useState(DURATIONS.INICIANDO);
+  const [isRunning, setIsRunning] = useState(false);
+  const [phase, setPhase] = useState("INICIANDO");
+  const [pomodorosCompleted, setPomodorosCompleted] = useState(1);
+  const [totalPomodoros, setTotalPomodoros] = useState(4);
+  const [mode, setMode] = useState("auto");
   const [backgroundImage, setBackgroundImage] = useState("descanso");
   const [aviso, setAviso] = useState("");
   const [qrValue, setQrValue] = useState("");
-  const [currentTime, setCurrentTime] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
-  const [location, setLocation] = useState('Córdoba, Argentina');
-  const qrValueRef = useRef(""); // Usamos useRef para almacenar el código QR
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [location] = useState("Córdoba, Argentina");
+
+  // refs
+  const qrValueRef = useRef("");
   const Client = useRef(null);
-  const audio = new Audio(campana);
-  const usersActivities = [];
-  const greetedUsers = useRef(new Set()); // Para rastrear usuarios ya saludados
+  const audioRef = useRef(null);
+  const greetedUsers = useRef(new Set());
 
-  // Función para enviar mensajes al chat
-  const sendMessage = useCallback((channel, message) => {
-    if (Client.current) {
-      Client.current.say(channel, message).catch((error) => {
-        console.error("Error al enviar mensaje:", error);
-      });
-    }
-  }, []);
-  // Actualizar fecha y hora cada segundo
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      
-      // Formatear hora
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      setCurrentTime(`${hours}:${minutes}:${seconds}`);
-      
-      // Formatear fecha
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      setCurrentDate(now.toLocaleDateString('es-AR', options));
-    };
-    
-    // Actualizar inmediatamente y luego cada segundo
-    updateDateTime();
-    const intervalId = setInterval(updateDateTime, 1000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
-
-  // Referencia al intervalo del temporizador
-  const timerRef = useRef(null);
-
-  // Limpiar intervalo cuando el componente se desmonte
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
-
-  // Referencia para mantener el estado actual del modo
-  const modeRef = useRef(mode);
+  // Timer refs to avoid drift
+  const timerRef = useRef(null); // interval id
+  const startTimestampRef = useRef(null); // ms
+  const endTimestampRef = useRef(null); // ms
+  const remainingBeforeStartRef = useRef(DURATIONS.INICIANDO); // seconds
   const isRunningRef = useRef(isRunning);
+  const modeRef = useRef(mode);
+  const hasSentInitialMessage = useRef(false);
+  // NEW: marca si en modo auto ya se inició manualmente una vez
+  const hasAutoStartedRef = useRef(false);
 
-  // Actualizar las referencias cuando cambian los estados
+  // Inicializar audio una vez
   useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
+    audioRef.current = new Audio(campana);
+    audioRef.current.preload = "auto";
+  }, []);
 
+  // Actualizar referencias de estados que usamos en refs
   useEffect(() => {
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
-  // Función para verificar el modo
-  const verifyMode = useCallback(() => {
-    // Si estamos en modo automático, continuamos con la siguiente fase
-    if (modeRef.current === "auto") {
-      setIsRunning(true); // Reanudar el temporizador automáticamente
-    } else {
-      setIsRunning(false); // En modo manual, pausamos el temporizador
-    }
-  }, []);
-
-  // Cambiar de fase y manejar las transiciones de manera más robusta
-  const handlePhaseSwitch = useCallback(() => {
-    // Detener el temporizador actual
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Reproducir sonido de notificación
-    audio.play().catch(error => {
-      console.error('Error al reproducir sonido:', error);
-    });
-
-    // Resetear el flag de mensaje enviado al cambiar de fase
-    hasSentInitialMessage.current = false;
-
-    // Manejar la transición de fase
-    switch (phase) {
-      case "INICIANDO":
-        setPhase("💻PRODUCTIVO📋");
-        setTimeLeft(60 * 60);
-        setBackgroundImage("productivo");
-        break;
-
-      case "💻PRODUCTIVO📋":
-        const newPomodoroCount = pomodorosCompleted + 1;
-        
-        if (newPomodoroCount > totalPomodoros) {
-          setPhase("🌳HEMOS TERMINADO🌳");
-          setTimeLeft(10 * 60);
-          setBackgroundImage("descanso");
-        } else {
-          setPhase("🍵DESCANSO🍙");
-          setTimeLeft(10 * 60);
-          setBackgroundImage("descanso");
-          setPomodorosCompleted(prev => prev + 1);
-        }
-        break;
-
-      case "🍵DESCANSO🍙":
-        setPhase("💻PRODUCTIVO📋");
-        setTimeLeft(60 * 60);
-        setBackgroundImage("productivo");
-        break;
-
-      case "🌳HEMOS TERMINADO🌳":
-        setPhase("🌳HEMOS TERMINADO🌳");
-        setTimeLeft(0);
-        setBackgroundImage("descanso");
-        // No enviar mensaje aquí, se manejará en el efecto de cambio de fase
-        break;
-    }
-
-    // Verificar el modo y actualizar el estado de ejecución
-    verifyMode();
-  }, [phase, pomodorosCompleted, totalPomodoros, sendMessage, verifyMode]);
-
-  // Referencia para controlar el envío de mensajes
-  const hasSentInitialMessage = useRef(false);
-
-  // Lógica del temporizador mejorada
   useEffect(() => {
-    // Función que se ejecutará en cada tick del temporizador
-    const tick = () => {
-      if (!isRunningRef.current) return;
-      
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          handlePhaseSwitch();
-          return 0;
-        }
-        return prevTime - 1;
-      });
+    modeRef.current = mode;
+  }, [mode]);
+
+  // Actualizar fecha y hora cada segundo
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      setCurrentTime(`${hours}:${minutes}:${seconds}`);
+      const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+      setCurrentDate(now.toLocaleDateString("es-AR", options));
     };
 
-    // Limpiar intervalo existente si hay uno
+    updateDateTime();
+    const id = setInterval(updateDateTime, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Helper: establecer endTimestamp y startTimestamp en base a remainingBeforeStartRef
+  const startWithRemaining = useCallback((remainingSeconds) => {
+    const now = Date.now();
+    startTimestampRef.current = now;
+    endTimestampRef.current = now + remainingSeconds * 1000;
+    remainingBeforeStartRef.current = remainingSeconds;
+  }, []);
+
+  // Calcular remaining usando timestamps - evita drift
+  const computeRemaining = useCallback(() => {
+    if (!endTimestampRef.current) return 0;
+    const ms = endTimestampRef.current - Date.now();
+    return Math.max(0, Math.ceil(ms / 1000));
+  }, []);
+
+  // Manejo de cambio de fase
+  const handlePhaseSwitch = useCallback(() => {
+    // Detener interval para evitar overlapping
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // Configurar el temporizador solo si está en modo automático o si se está ejecutando manualmente
-    if (isRunning && (modeRef.current === 'auto' || modeRef.current === 'manual')) {
-      // Notificar cambio de fase solo si el temporizador está iniciando y no hemos enviado el mensaje inicial
-      if (timeLeft > 0 && !hasSentInitialMessage.current) {
-        enviarMensaje(phase, pomodorosCompleted, sendMessage);
-        hasSentInitialMessage.current = true;
-      }
-
-      timerRef.current = setInterval(tick, 1000);
-    } else {
-      // Resetear el flag cuando el temporizador se detiene
-      hasSentInitialMessage.current = false;
+    // Reproducir audio
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((e) => {
+        console.debug("audio play failed:", e?.message || e);
+      });
     }
 
-    // Limpiar intervalo cuando el efecto se desmonte o cambie la dependencia
+    hasSentInitialMessage.current = false;
+
+    // Calculamos la siguiente fase en función de la actual
+    let nextPhase = phase;
+    let nextRemaining = 0;
+    let incrementPomodoro = false;
+
+    switch (phase) {
+      case "INICIANDO":
+        nextPhase = "💻PRODUCTIVO📋";
+        nextRemaining = DURATIONS.PRODUCTIVO;
+        break;
+      case "💻PRODUCTIVO📋": {
+        const newPomodoroCount = pomodorosCompleted + 1;
+        if (newPomodoroCount > totalPomodoros) {
+          nextPhase = "🌳HEMOS TERMINADO🌳";
+          nextRemaining = DURATIONS.DESCANSO;
+// ahora son 600s
+          incrementPomodoro = false;
+        } else {
+          nextPhase = "🍵DESCANSO🍙";
+          nextRemaining = DURATIONS.DESCANSO;
+          incrementPomodoro = true;
+        }
+        break;
+      }
+      case "🍵DESCANSO🍙": 
+        nextPhase = "💻PRODUCTIVO📋"; 
+        nextRemaining = DURATIONS.PRODUCTIVO; 
+      break;
+      case "🌳HEMOS TERMINADO🌳":
+        nextPhase = "🌳HEMOS TERMINADO🌳";
+        nextRemaining = DURATIONS.TERMINADO;
+        break;
+      default:
+        break;
+    }
+
+    // Aplicar la fase calculada
+    setPhase(nextPhase);
+    setBackgroundImage(nextPhase === "💻PRODUCTIVO📋" ? "productivo" : "descanso");
+    if (incrementPomodoro) setPomodorosCompleted((p) => p + 1);
+
+    // Si estamos en modo AUTO y ya hubo un inicio manual (hasAutoStartedRef true),
+    // entonces la siguiente fase debe iniciarse automáticamente. Si no, esperar !start.
+    if (modeRef.current === "auto" && hasAutoStartedRef.current && nextRemaining > 0) {
+      // iniciar timestamps y arrancar
+      remainingBeforeStartRef.current = nextRemaining;
+      startWithRemaining(nextRemaining);
+      setIsRunning(true);
+      isRunningRef.current = true;
+
+      // inicar interval
+      if (!timerRef.current) {
+        timerRef.current = setInterval(() => {
+          const remaining = computeRemaining();
+          setTimeLeft(remaining);
+          if (remaining <= 0) {
+            // siguiente cambio de fase
+            handlePhaseSwitch();
+          }
+        }, 1000);
+      }
+    } else {
+      // No iniciar automáticamente: solo establecer remaining y esperar !start
+      remainingBeforeStartRef.current = nextRemaining;
+      setTimeLeft(nextRemaining);
+      setIsRunning(false);
+      isRunningRef.current = false;
+
+      // Si llegamos al final del circuito, aseguramos que no quede en loop
+      if (nextPhase === "🌳HEMOS TERMINADO🌳") {
+        hasAutoStartedRef.current = false;
+      }
+    }
+  }, [computeRemaining, pomodorosCompleted, totalPomodoros, phase, startWithRemaining]);
+
+  // Efecto principal que administra el interval cuando isRunning cambia
+  useEffect(() => {
+    // limpiar si ya existía
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Si no estamos corriendo, terminar aquí
+    if (!isRunning) return;
+
+    // Si no hay endTimestamp (por ejemplo reinicio), configurarlo usando remainingBeforeStartRef
+    if (!endTimestampRef.current || computeRemaining() <= 0) {
+      startWithRemaining(remainingBeforeStartRef.current || DURATIONS.INICIANDO);
+    }
+
+    // enviar mensaje inicial de fase si corresponde
+    if (!hasSentInitialMessage.current && timeLeft > 0) {
+      enviarMensaje(phase, pomodorosCompleted, (ch, msg) => {
+        if (Client.current) Client.current.say(ch, msg);
+      });
+      hasSentInitialMessage.current = true;
+    }
+
+    // iniciar interval que actualiza timeLeft en base a timestamps
+    timerRef.current = setInterval(() => {
+      const remaining = computeRemaining();
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        // Dejar que handlePhaseSwitch se encargue de reiniciar o pausar
+        handlePhaseSwitch();
+      }
+    }, 1000);
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [isRunning, phase, timeLeft, handlePhaseSwitch, pomodorosCompleted, sendMessage]);
+  }, [isRunning, computeRemaining, handlePhaseSwitch, phase, pomodorosCompleted, timeLeft, startWithRemaining]);
 
-  // Efecto para manejar cambios de fase
+  // Efecto que reacciona cuando timeLeft llega a 0 por fuera del tick (solo para mensaje final)
   useEffect(() => {
-    // Si el tiempo llega a 0, cambiar de fase
-    if (timeLeft <= 0) {
-      const wasRunning = isRunning;
-      handlePhaseSwitch();
-      
-      // Solo enviar mensaje de finalización si estamos en la fase de terminado
-      // y el temporizador estaba en ejecución
-      if (phase === "🌳HEMOS TERMINADO🌳" && wasRunning && Client.current) {
-        Client.current.say('cuartodechenz', '🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!');
-      }
+    if (timeLeft <= 0 && phase === "🌳HEMOS TERMINADO🌳" && isRunningRef.current && Client.current) {
+      Client.current.say("cuartodechenz", "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
     }
-  }, [timeLeft, handlePhaseSwitch, isRunning, phase]);
+  }, [timeLeft, phase]);
 
-  // Iniciar o pausar el temporizador de manera más robusta
+  // Start timer
   const startTimer = useCallback(() => {
-    // No hacer nada si ya está corriendo
-    if (isRunning) return;
-    
-    // Si estamos en modo manual y ya hay tiempo restante, simplemente reanudar
-    if (mode === "manual" && timeLeft > 0) {
-      console.log('Reanudando temporizador manual');
-      setIsRunning(true);
-      
-      // Asegurarse de que el temporizador se reinicie correctamente
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      
-      // Configurar un nuevo intervalo
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prevTime => {
-          if (prevTime <= 1) {
-            handlePhaseSwitch();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-      
-      return;
+    // Si ya está corriendo nada que hacer
+    if (isRunningRef.current) return;
+
+    // Si no hay remaining definido, configurar por fase
+    let defaultRemaining = remainingBeforeStartRef.current;
+    if (!defaultRemaining || defaultRemaining <= 0) {
+      defaultRemaining = phase === "🍵DESCANSO🍙" ? DURATIONS.DESCANSO : phase === "💻PRODUCTIVO📋" ? DURATIONS.PRODUCTIVO : DURATIONS.INICIANDO;
+      remainingBeforeStartRef.current = defaultRemaining;
+      setTimeLeft(defaultRemaining);
     }
-    
-    // Si no hay tiempo restante, reiniciar con el tiempo predeterminado para la fase actual
-    if (timeLeft <= 0) {
-      console.log('Reiniciando temporizador con tiempo predeterminado');
-      const newTime = phase === "🍵DESCANSO🍙" ? 3 * 60 : 5 * 60; // Ajustado a 3 y 5 minutos según la lógica de las fases
-      setTimeLeft(newTime);
-    }
-    
-    // Iniciar el temporizador
-    console.log('Iniciando nuevo temporizador');
+
+    // Generar timestamps y arrancar
+    startWithRemaining(remainingBeforeStartRef.current);
     setIsRunning(true);
-    
-    // Asegurarse de que el temporizador se reinicie correctamente
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    
-    // Configurar un nuevo intervalo
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          handlePhaseSwitch();
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-    
-    // Enviar mensaje de inicio
-    if (Client.current) {
-      const phaseMessage = phase === "💻PRODUCTIVO📋" ? "fase de PRODUCTIVIDAD" : 
-                         phase === "🍵DESCANSO🍙" ? "tiempo de DESCANSO" : "sesión";
-      Client.current.say('cuartodechenz', `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`);
-    }
-    
-  }, [isRunning, mode, phase, timeLeft, handlePhaseSwitch]);
+    isRunningRef.current = true;
 
-  // Pausar el temporizador de manera segura
-  const pauseTimer = useCallback(() => {
-    console.log('Pausing timer...');
-    
-    // Detener el intervalo actual
+    // Si estamos en modo auto, marcar que auto fue iniciado por el usuario (primera vez)
+    if (modeRef.current === "auto") {
+      hasAutoStartedRef.current = true;
+    }
+
+    // iniciar interval
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
-    // Solo actualizar el estado si está corriendo
-    if (isRunning) {
-      console.log('Deteniendo el temporizador');
+
+    timerRef.current = setInterval(() => {
+      const remaining = computeRemaining();
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        handlePhaseSwitch();
+      }
+    }, 1000);
+
+    // avisar al chat
+    if (Client.current) {
+      const phaseMessage = phase === "💻PRODUCTIVO📋" ? "fase de PRODUCTIVIDAD" : phase === "🍵DESCANSO🍙" ? "tiempo de DESCANSO" : "sesión";
+      Client.current.say("cuartodechenz", `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`);
+    }
+  }, [computeRemaining, phase, startWithRemaining, handlePhaseSwitch]);
+
+  // Pause timer
+  const pauseTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // calcular remaining y guardarlo
+    const remaining = computeRemaining();
+    remainingBeforeStartRef.current = remaining;
+    endTimestampRef.current = null;
+    startTimestampRef.current = null;
+
+    if (isRunningRef.current) {
       setIsRunning(false);
-      
-      // Notificar al chat
+      isRunningRef.current = false;
+
       if (Client.current) {
-        const remainingTime = formatTime(timeLeft);
-        Client.current.say('cuartodechenz', `⏸️ Temporizador pausado con ${remainingTime} restantes. Usa !start para reanudar.`);
+        const remainingStr = formatTime(remaining);
+        Client.current.say("cuartodechenz", `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
       }
     }
-  }, [isRunning, timeLeft]);
+  }, [computeRemaining]);
 
-  // Ajustar minutos
+  // set minutes desde comando
   const setMinutes = (minutes) => {
-    setTimeLeft(minutes * 60);
+    const seconds = minutes * 60;
+    remainingBeforeStartRef.current = seconds;
+    setTimeLeft(seconds);
+    // si está corriendo, reiniciar timestamps
+    if (isRunningRef.current) {
+      startWithRemaining(seconds);
+    }
   };
 
-  // Ajustar el número de pomodoros completados
   const setPomodoros = (count) => setPomodorosCompleted(count);
-
-  // Ajustar el número total de pomodoros
   const setTotalPomodorosCount = (count) => setTotalPomodoros(count);
 
-  // Controlador de Twitch
+  // Twitch controller y comandos
   useEffect(() => {
     Client.current = twitch_controller();
     Client.current.on("message", (channel, tags, message, self) => {
-      if (self) return; // Ignorar mensajes del propio bot
+      if (self) return;
       const args = message.split(" ");
       const command = args[0].toLowerCase();
       const username = tags.username;
       const isSub = tags.badges?.subscriber;
-      const isPrime = tags.badges?.premium;
       const isVip = tags.badges?.vip;
       const isMod = tags.badges?.moderator;
-      // Solo saludar si es la primera vez que vemos a este usuario y no es cuartodechenz ni cuartodechenz
-      if (!greetedUsers.current.has(username) && 
-          username.toLowerCase() !== 'cuartodechenz' && 
-          username.toLowerCase() !== 'brunispet') {
+
+      if (!greetedUsers.current.has(username) && username.toLowerCase() !== 'cuartodechenz' && username.toLowerCase() !== 'brunispet') {
         greetedUsers.current.add(username);
-        
         const mensajeGeneral = `¡Qué alegría verte por aquí, ${username}! Espero que tengas una jornada productiva. 📚✨`;
-        const mensajeSubs = isSub
-          ? `👑 ¡Mil gracias por apoyar este canal! Gracias a ti, las croquetas para mí y los michis están aseguradas. 🐱💕`
-          : `Espero que tengas una excelente sesión de estudio. ¡Mucho ánimo! 💪📖`;
-        const mensajeMod = isMod
-          ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨`
-          : "";
-        const mensajeVid = isVip && username !== "mohcitrus"
-          ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟`
-          : "";
-          
-        Client.current.say(
-          channel,
-          mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid
-        );
+        const mensajeSubs = isSub ? `👑 ¡Mil gracias por apoyar este canal! Gracias a ti, las croquetas para mí y los michis están aseguradas. 🐱💕` : `Espero que tengas una excelente sesión de estudio. ¡Mucho ánimo! 💪📖`;
+        const mensajeMod = isMod ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨` : "";
+        const mensajeVid = isVip && username !== "mohcitrus" ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟` : "";
+
+        Client.current.say(channel, mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid);
       }
 
       if (!message.startsWith("!")) return;
 
-      if (
-        command === "!sala" ||
-        command === "!code" ||
-        command === "!room" ||
-        command === "!salita"
-      ) {
+      // ciertos comandos solo pueden ser usados por el propio usuario o mods
+      if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
         if (qrValueRef.current) {
-          sendMessage(
+          Client.current.say(
             "cuartodechenz",
-            `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${
-              qrValueRef.current
-            } Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
+            `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
         } else {
-          sendMessage(
-            "cuartodechenz",
-            "No hay un código configurado. Usa !codigo [token] para establecer uno."
-          );
+          Client.current.say("cuartodechenz", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
         }
         return;
       }
+
       if (tags.username !== "cuartodechenz" && !tags.mod) {
-        return; // Ignorar comandos si el usuario no es "cuartodechenz" y no es un moderador
+        return; // ignorar comandos administrativos
       }
 
       switch (command) {
@@ -382,134 +369,72 @@ const App = () => {
           pauseTimer();
           break;
         case "!min":
-          if (args[1] && !isNaN(args[1])) {
-            setMinutes(parseInt(args[1]));
-          }
+          if (args[1] && !isNaN(args[1])) setMinutes(parseInt(args[1]));
           break;
         case "!pomo":
-          if (args[1] && !isNaN(args[1])) {
-            setPomodoros(parseInt(args[1]));
-          }
+          if (args[1] && !isNaN(args[1])) setPomodoros(parseInt(args[1]));
           break;
         case "!pomot":
-          if (args[1] && !isNaN(args[1])) {
-            setTotalPomodorosCount(parseInt(args[1]));
-          }
+          if (args[1] && !isNaN(args[1])) setTotalPomodorosCount(parseInt(args[1]));
           break;
-        case "!mode":
-          // Usar una función de actualización para obtener el estado más reciente
-          setMode(prevMode => {
+        case "!mode": {
+          // Protección: si justo llegó a 0, bloqueamos el cambio de fase pendiente
+          if (timeLeft <= 1) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            endTimestampRef.current = null;
+          }
+
+          setMode((prevMode) => {
             const updatedMode = prevMode === "auto" ? "manual" : "auto";
-            console.log(`🔁 Cambiando modo de ${prevMode} a: ${updatedMode.toUpperCase()}`);
-            
-            // Actualizar la referencia para acceso inmediato
             modeRef.current = updatedMode;
-            
-            // Limpiar cualquier intervalo existente
+
+            // Limpiar interval siempre
             if (timerRef.current) {
               clearInterval(timerRef.current);
               timerRef.current = null;
             }
-            
-            // Aplicar efecto según el nuevo modo
+
             if (updatedMode === "manual") {
-              // Detener el temporizador
+              // detener y esperar !start
               isRunningRef.current = false;
               setIsRunning(false);
-              
-              // Notificar al chat
-              if (Client.current) {
-                Client.current.say(
-                  channel,
-                  `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`
-                );
-              }
+
+              if (Client.current)
+                Client.current.say(channel, `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
+
+              // limpiar bandera auto
+              hasAutoStartedRef.current = false;
             } else {
-              // Modo automático - iniciar el temporizador
-              isRunningRef.current = true;
-              setIsRunning(true);
-              
-              // Configurar un nuevo intervalo para el modo automático
-              const tick = () => {
-                setTimeLeft(prevTime => {
-                  if (prevTime <= 1) {
-                    handlePhaseSwitch();
-                    return 0;
-                  }
-                  return prevTime - 1;
-                });
-              };
-              
-              timerRef.current = setInterval(tick, 1000);
-              
-              // Notificar al chat
-              if (Client.current) {
-                Client.current.say(
-                  channel,
-                  `/me ⚙️ Cambiado a modo AUTOMÁTICO. El temporizador continuará automáticamente.`
-                );
-              }
+              // modo auto
+              hasAutoStartedRef.current = false;
+
+              if (Client.current)
+                Client.current.say(channel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
             }
-            
+
             return updatedMode;
           });
-          break;
-
-          // Aplicar efecto según el nuevo modo
-          if (newMode === "manual") {
-            // Detener el temporizador
-            isRunningRef.current = false;
-            setIsRunning(false);
-            
-            // Notificar al chat
-            if (Client.current) {
-              Client.current.say(
-                channel,
-                `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`
-              );
-            }
-          } else {
-            // Modo automático - iniciar el temporizador
-            isRunningRef.current = true;
-            setIsRunning(true);
-            
-            // Configurar un nuevo intervalo para el modo automático
-            const tick = () => {
-              setTimeLeft(prevTime => {
-                if (prevTime <= 1) {
-                  handlePhaseSwitch();
-                  return 0;
-                }
-                return prevTime - 1;
-              });
-            };
-            
-            timerRef.current = setInterval(tick, 1000);
-            
-            // Notificar al chat
-            if (Client.current) {
-              Client.current.say(
-                channel,
-                `/me ⚙️ Cambiado a modo AUTOMÁTICO. El temporizador continuará automáticamente.`
-              );
-            }
-          }
-          break;
+        }
+        break;
         case "!reset":
           setPhase("💻PRODUCTIVO📋");
+          remainingBeforeStartRef.current = DURATIONS.PRODUCTIVO;
+          setTimeLeft(DURATIONS.PRODUCTIVO);
+          setPomodorosCompleted(1);
+          hasAutoStartedRef.current = false;
+          setIsRunning(false);
+          isRunningRef.current = false;
           break;
         case "!aviso":
-          const message = args.slice(1).join(" ");
-          console.log("Aviso actualizado:", message);
-          setAviso(message);
+          const messageAviso = args.slice(1).join(" ");
+          console.log("Aviso actualizado:", messageAviso);
+          setAviso(messageAviso);
           break;
         case "!codigo":
           const token = args.slice(1).join(" ");
           if (!token) {
-            sendMessage(
-              "cuartodechenz",
-              "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]"
-            );
+            Client.current.say("cuartodechenz", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
             return;
           }
           qrValueRef.current = token;
@@ -519,7 +444,13 @@ const App = () => {
           break;
       }
     });
-  }, []); // Este useEffect solo se ejecuta una vez al principio
+
+    return () => {
+      if (Client.current) {
+        try { Client.current.disconnect(); } catch (e) { /* ignore */ }
+      }
+    };
+  }, [pauseTimer, startTimer]);
 
   return (
     <div className="container">
