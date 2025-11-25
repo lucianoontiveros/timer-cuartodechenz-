@@ -7,10 +7,6 @@ import News from "./components/News";
 import Qrcode from "./components/Qrcode";
 import campana from "./components/utils/campana.mp3";
 
-// Versión corregida del App.jsx - Comportamiento: Opción A/C combinado según requerimiento
-// Manual: detiene y espera !start
-// Auto: al cambiar a auto NO arranca solo. Tras el primer !start en auto, funciona completamente automático hasta completar el circuito
-
 const DURATIONS = {
   INICIANDO: 10 * 60,
   PRODUCTIVO: 60 * 60,
@@ -39,15 +35,68 @@ const App = () => {
   const greetedUsers = useRef(new Set());
 
   // Timer refs to avoid drift
-  const timerRef = useRef(null); // interval id
-  const startTimestampRef = useRef(null); // ms
-  const endTimestampRef = useRef(null); // ms
-  const remainingBeforeStartRef = useRef(DURATIONS.INICIANDO); // seconds
+  const timerRef = useRef(null);
+  const startTimestampRef = useRef(null);
+  const endTimestampRef = useRef(null);
+  const remainingBeforeStartRef = useRef(DURATIONS.INICIANDO);
   const isRunningRef = useRef(isRunning);
   const modeRef = useRef(mode);
   const hasSentInitialMessage = useRef(false);
-  // NEW: marca si en modo auto ya se inició manualmente una vez
   const hasAutoStartedRef = useRef(false);
+
+  // Efecto para cargar el estado guardado al inicio
+  useEffect(() => {
+    const savedState = localStorage.getItem('pomodoroState');
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      // Verificar que el estado no sea demasiado viejo (más de 1 hora)
+      if (Date.now() - state.timestamp < 3600000) {
+        setTimeLeft(state.timeLeft);
+        setIsRunning(state.isRunning);
+        setPhase(state.phase);
+        setPomodorosCompleted(state.pomodorosCompleted);
+        setTotalPomodoros(state.totalPomodoros);
+        setMode(state.mode);
+        setBackgroundImage(state.backgroundImage);
+        remainingBeforeStartRef.current = state.remainingBeforeStart;
+        hasAutoStartedRef.current = state.hasAutoStarted;
+        isRunningRef.current = state.isRunning;
+        modeRef.current = state.mode;
+      } else {
+        // Si el estado es viejo, limpiar
+        localStorage.removeItem('pomodoroState');
+      }
+    }
+  }, []);
+
+  // Función para guardar el estado
+  const saveState = useCallback(() => {
+    const stateToSave = {
+      timeLeft,
+      isRunning,
+      phase,
+      pomodorosCompleted,
+      totalPomodoros,
+      mode,
+      backgroundImage,
+      remainingBeforeStart: remainingBeforeStartRef.current,
+      hasAutoStarted: hasAutoStartedRef.current,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('pomodoroState', JSON.stringify(stateToSave));
+  }, [timeLeft, isRunning, phase, pomodorosCompleted, totalPomodoros, mode, backgroundImage]);
+
+  // Efecto para guardar el estado cuando cambie
+  useEffect(() => {
+    saveState();
+  }, [saveState, timeLeft, isRunning, phase, pomodorosCompleted, totalPomodoros, mode]);
+
+  // Efecto para limpiar el estado cuando se complete la sesión
+  useEffect(() => {
+    if (phase === "🌳HEMOS TERMINADO🌳" && timeLeft === 0) {
+      localStorage.removeItem('pomodoroState');
+    }
+  }, [phase, timeLeft]);
 
   // Inicializar audio una vez
   useEffect(() => {
@@ -91,7 +140,7 @@ const App = () => {
 
   // Calcular remaining usando timestamps - evita drift
   const computeRemaining = useCallback(() => {
-    if (!endTimestampRef.current) return 0;
+    if (!endTimestampRef.current) return Math.max(0, Math.ceil(remainingBeforeStartRef.current));
     const ms = endTimestampRef.current - Date.now();
     return Math.max(0, Math.ceil(ms / 1000));
   }, []);
@@ -129,7 +178,6 @@ const App = () => {
         if (newPomodoroCount > totalPomodoros) {
           nextPhase = "🌳HEMOS TERMINADO🌳";
           nextRemaining = DURATIONS.DESCANSO;
-// ahora son 600s
           incrementPomodoro = false;
         } else {
           nextPhase = "🍵DESCANSO🍙";
@@ -138,10 +186,10 @@ const App = () => {
         }
         break;
       }
-      case "🍵DESCANSO🍙": 
-        nextPhase = "💻PRODUCTIVO📋"; 
-        nextRemaining = DURATIONS.PRODUCTIVO; 
-      break;
+      case "🍵DESCANSO🍙":
+        nextPhase = "💻PRODUCTIVO📋";
+        nextRemaining = DURATIONS.PRODUCTIVO;
+        break;
       case "🌳HEMOS TERMINADO🌳":
         nextPhase = "🌳HEMOS TERMINADO🌳";
         nextRemaining = DURATIONS.TERMINADO;
@@ -164,10 +212,14 @@ const App = () => {
       setIsRunning(true);
       isRunningRef.current = true;
 
-      // inicar interval
+      // iniciar interval (AUTOMÁTICO) y guardar remaining cada tick
       if (!timerRef.current) {
         timerRef.current = setInterval(() => {
           const remaining = computeRemaining();
+          
+          // Guardar el último remaining
+          remainingBeforeStartRef.current = remaining;
+
           setTimeLeft(remaining);
           if (remaining <= 0) {
             // siguiente cambio de fase
@@ -187,7 +239,10 @@ const App = () => {
         hasAutoStartedRef.current = false;
       }
     }
-  }, [computeRemaining, pomodorosCompleted, totalPomodoros, phase, startWithRemaining]);
+
+    // Guardar el estado después del cambio de fase
+    saveState();
+  }, [computeRemaining, pomodorosCompleted, totalPomodoros, phase, startWithRemaining, saveState]);
 
   // Efecto principal que administra el interval cuando isRunning cambia
   useEffect(() => {
@@ -200,8 +255,8 @@ const App = () => {
     // Si no estamos corriendo, terminar aquí
     if (!isRunning) return;
 
-    // Si no hay endTimestamp (por ejemplo reinicio), configurarlo usando remainingBeforeStartRef
-    if (!endTimestampRef.current || computeRemaining() <= 0) {
+    // Si no hay endTimestamp (por ejemplo reinicio/crash), restaurarlo usando remainingBeforeStartRef
+    if (!endTimestampRef.current) {
       startWithRemaining(remainingBeforeStartRef.current || DURATIONS.INICIANDO);
     }
 
@@ -216,6 +271,10 @@ const App = () => {
     // iniciar interval que actualiza timeLeft en base a timestamps
     timerRef.current = setInterval(() => {
       const remaining = computeRemaining();
+
+      // Guardar el último tiempo correcto para poder restaurarlo si se pierde el timestamp
+      remainingBeforeStartRef.current = remaining;
+
       setTimeLeft(remaining);
       if (remaining <= 0) {
         // Dejar que handlePhaseSwitch se encargue de reiniciar o pausar
@@ -234,7 +293,7 @@ const App = () => {
   // Efecto que reacciona cuando timeLeft llega a 0 por fuera del tick (solo para mensaje final)
   useEffect(() => {
     if (timeLeft <= 0 && phase === "🌳HEMOS TERMINADO🌳" && isRunningRef.current && Client.current) {
-      Client.current.say("cuartodechenz", "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
+      Client.current.say("brunispet", "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
     }
   }, [timeLeft, phase]);
 
@@ -269,6 +328,10 @@ const App = () => {
 
     timerRef.current = setInterval(() => {
       const remaining = computeRemaining();
+
+      // Guardar el último tiempo correcto
+      remainingBeforeStartRef.current = remaining;
+
       setTimeLeft(remaining);
       if (remaining <= 0) {
         handlePhaseSwitch();
@@ -276,11 +339,30 @@ const App = () => {
     }, 1000);
 
     // avisar al chat
-    if (Client.current) {
-      const phaseMessage = phase === "💻PRODUCTIVO📋" ? "fase de PRODUCTIVIDAD" : phase === "🍵DESCANSO🍙" ? "tiempo de DESCANSO" : "sesión";
-      Client.current.say("cuartodechenz", `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`);
-    }
-  }, [computeRemaining, phase, startWithRemaining, handlePhaseSwitch]);
+    // avisar al chat
+if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
+  let phaseMessage = "";
+
+  if (phase === "💻PRODUCTIVO📋") {
+    phaseMessage = "fase de PRODUCTIVIDAD";
+  } else if (phase === "🍵DESCANSO🍙") {
+    phaseMessage = "tiempo de DESCANSO";
+  } else if (phase === "INICIANDO") {
+    phaseMessage = "fase de INICIO";
+  }
+
+  // Solo enviar si hay mensaje definido
+  if (phaseMessage) {
+    Client.current.say(
+      "brunispet",
+      `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`
+    );
+  }
+}
+
+    // Guardar el estado al iniciar
+    saveState();
+  }, [computeRemaining, phase, startWithRemaining, handlePhaseSwitch, saveState]);
 
   // Pause timer
   const pauseTimer = useCallback(() => {
@@ -291,7 +373,9 @@ const App = () => {
 
     // calcular remaining y guardarlo
     const remaining = computeRemaining();
+    // Guardamos el remaining antes de anular timestamps
     remainingBeforeStartRef.current = remaining;
+
     endTimestampRef.current = null;
     startTimestampRef.current = null;
 
@@ -301,10 +385,13 @@ const App = () => {
 
       if (Client.current) {
         const remainingStr = formatTime(remaining);
-        Client.current.say("cuartodechenz", `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
+        Client.current.say("brunispet", `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
       }
     }
-  }, [computeRemaining]);
+
+    // Guardar el estado al pausar
+    saveState();
+  }, [computeRemaining, saveState]);
 
   // set minutes desde comando
   const setMinutes = (minutes) => {
@@ -315,10 +402,18 @@ const App = () => {
     if (isRunningRef.current) {
       startWithRemaining(seconds);
     }
+    saveState();
   };
 
-  const setPomodoros = (count) => setPomodorosCompleted(count);
-  const setTotalPomodorosCount = (count) => setTotalPomodoros(count);
+  const setPomodoros = (count) => {
+    setPomodorosCompleted(count);
+    saveState();
+  };
+
+  const setTotalPomodorosCount = (count) => {
+    setTotalPomodoros(count);
+    saveState();
+  };
 
   // Twitch controller y comandos
   useEffect(() => {
@@ -348,11 +443,11 @@ const App = () => {
       if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
         if (qrValueRef.current) {
           Client.current.say(
-            "cuartodechenz",
+            "brunispet",
             `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
         } else {
-          Client.current.say("cuartodechenz", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
+          Client.current.say("brunispet", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
         }
         return;
       }
@@ -413,19 +508,56 @@ const App = () => {
                 Client.current.say(channel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
             }
 
+            saveState();
             return updatedMode;
           });
         }
         break;
-        case "!reset":
-          setPhase("💻PRODUCTIVO📋");
-          remainingBeforeStartRef.current = DURATIONS.PRODUCTIVO;
-          setTimeLeft(DURATIONS.PRODUCTIVO);
-          setPomodorosCompleted(1);
-          hasAutoStartedRef.current = false;
-          setIsRunning(false);
-          isRunningRef.current = false;
-          break;
+          case "!reset":
+
+            try {
+              if (Client.current) {
+                Client.current.disconnect();
+              }
+            } catch (e) {}
+
+            Client.current = twitch_controller(); // 🔥 Reconexión REAL
+            hasSentInitialMessage.current = false;
+            // 1) Limpiar estado persistido
+            localStorage.removeItem("pomodoroState");
+
+            // 2) Detener timer
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+
+            // 3) Reset timestamps
+            startTimestampRef.current = null;
+            endTimestampRef.current = null;
+            remainingBeforeStartRef.current = DURATIONS.INICIANDO;
+
+            // 4) Reset estados React
+            setPhase("INICIANDO");
+            setTimeLeft(DURATIONS.INICIANDO);
+            setPomodorosCompleted(1);
+            setTotalPomodoros(4);
+            hasAutoStartedRef.current = false;
+
+            setIsRunning(false);
+            isRunningRef.current = false;
+
+            // 5) Reconectar bot
+            
+
+            // 6) Aviso al chat
+            if (Client.current) {
+              Client.current.say(
+                "brunispet",
+                "🔄 Timer y bot reiniciados. Iniciando en fase INICIANDO."
+              );
+            }
+        break;
         case "!aviso":
           const messageAviso = args.slice(1).join(" ");
           console.log("Aviso actualizado:", messageAviso);
@@ -434,7 +566,7 @@ const App = () => {
         case "!codigo":
           const token = args.slice(1).join(" ");
           if (!token) {
-            Client.current.say("cuartodechenz", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
+            Client.current.say("brunispet", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
             return;
           }
           qrValueRef.current = token;
@@ -450,7 +582,7 @@ const App = () => {
         try { Client.current.disconnect(); } catch (e) { /* ignore */ }
       }
     };
-  }, [pauseTimer, startTimer]);
+  }, []);
 
   return (
     <div className="container">
