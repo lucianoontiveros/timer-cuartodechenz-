@@ -29,8 +29,8 @@
   --fuente-monospace: monospace;
 
   /* Fondos de imagen */
-  --fondo-productivo: url("/img/kero_produc.png");
-  --fondo-descanso: url("/img/kero_break.png");
+  --fondo-productivo: url("/img/reno_navidad_productivo.png");
+  --fondo-descanso: url("/img/oso_navidad_break.png");
   --fondo-bambu: url("/img/bambus.png");
 }
 
@@ -77,8 +77,8 @@ body {
 
 .productivo {
   background-image: var(--fondo-productivo);
-  height: 220px;
-  width: 220px;
+  height: 300px;
+  width: 300px;
   background-size: contain;
   background-repeat: no-repeat;
   font-family: var(--fuente-monospace);
@@ -89,8 +89,8 @@ body {
 
 .descanso {
   background-image: var(--fondo-descanso);
-  height: 200px;
-  width: 200px;
+  height: 300px;
+  width: 300px;
   background-size: contain;
   background-repeat: no-repeat;
   font-family: var(--fuente-monospace);
