@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { twitch_controller } from "./controller/twitch_controller";
 import { enviarMensaje } from "./controller/controller_mensajes";
 import "./index.css";
 import { formatTime } from "./components/utils/formatTime";
-import News from "./components/News";
-import Qrcode from "./components/Qrcode";
 import campana from "./components/utils/campana.mp3";
+
+// Lazy loading de componentes
+const News = lazy(() => import("./components/News"));
+const Qrcode = lazy(() => import("./components/Qrcode"));
 
 const DURATIONS = {
   INICIANDO: 10 * 60,
@@ -44,8 +46,35 @@ const App = () => {
   const hasSentInitialMessage = useRef(false);
   const hasAutoStartedRef = useRef(false);
 
+  // Función para limpiar localStorage antiguo
+  const cleanupOldStorage = useCallback(() => {
+    try {
+      const keys = Object.keys(localStorage);
+      const now = Date.now();
+      const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+      
+      keys.forEach(key => {
+        if (key.startsWith('pomodoroState')) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && data.timestamp && (now - data.timestamp > maxAge)) {
+              localStorage.removeItem(key);
+            }
+          } catch (e) {
+            // Si hay error en parse, eliminar la clave corrupta
+            localStorage.removeItem(key);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('Error limpiando localStorage:', e);
+    }
+  }, []);
+
   // Efecto para cargar el estado guardado al inicio
   useEffect(() => {
+    cleanupOldStorage();
+    
     const savedState = localStorage.getItem('pomodoroState');
     if (savedState) {
       const state = JSON.parse(savedState);
@@ -67,23 +96,39 @@ const App = () => {
         localStorage.removeItem('pomodoroState');
       }
     }
-  }, []);
+  }, [cleanupOldStorage]);
 
-  // Función para guardar el estado
+  // Función para guardar el estado con validación
   const saveState = useCallback(() => {
-    const stateToSave = {
-      timeLeft,
-      isRunning,
-      phase,
-      pomodorosCompleted,
-      totalPomodoros,
-      mode,
-      backgroundImage,
-      remainingBeforeStart: remainingBeforeStartRef.current,
-      hasAutoStarted: hasAutoStartedRef.current,
-      timestamp: Date.now()
-    };
-    localStorage.setItem('pomodoroState', JSON.stringify(stateToSave));
+    try {
+      const stateToSave = {
+        timeLeft,
+        isRunning,
+        phase,
+        pomodorosCompleted,
+        totalPomodoros,
+        mode,
+        backgroundImage,
+        remainingBeforeStart: remainingBeforeStartRef.current,
+        hasAutoStarted: hasAutoStartedRef.current,
+        timestamp: Date.now()
+      };
+      
+      // Validar que los datos sean válidos antes de guardar
+      if (typeof stateToSave.timeLeft === 'number' && 
+          typeof stateToSave.phase === 'string' &&
+          typeof stateToSave.timestamp === 'number') {
+        localStorage.setItem('pomodoroState', JSON.stringify(stateToSave));
+      }
+    } catch (e) {
+      console.warn('Error guardando estado:', e);
+      // Si hay error, limpiar localStorage para evitar corrupción
+      try {
+        localStorage.removeItem('pomodoroState');
+      } catch (cleanupError) {
+        console.warn('Error limpiando localStorage:', cleanupError);
+      }
+    }
   }, [timeLeft, isRunning, phase, pomodorosCompleted, totalPomodoros, mode, backgroundImage]);
 
   // Efecto para guardar el estado cuando cambie
@@ -127,7 +172,9 @@ const App = () => {
 
     updateDateTime();
     const id = setInterval(updateDateTime, 1000);
-    return () => clearInterval(id);
+    return () => {
+      if (id) clearInterval(id);
+    };
   }, []);
 
   // Helper: establecer endTimestamp y startTimestamp en base a remainingBeforeStartRef
@@ -293,7 +340,7 @@ const App = () => {
   // Efecto que reacciona cuando timeLeft llega a 0 por fuera del tick (solo para mensaje final)
   useEffect(() => {
     if (timeLeft <= 0 && phase === "🌳HEMOS TERMINADO🌳" && isRunningRef.current && Client.current) {
-      Client.current.say("cuartodechenz", "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
+      Client.current.say("brunispet", "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
     }
   }, [timeLeft, phase]);
 
@@ -339,26 +386,25 @@ const App = () => {
     }, 1000);
 
     // avisar al chat
-    // avisar al chat
-if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
-  let phaseMessage = "";
+    if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
+      let phaseMessage = "";
 
-  if (phase === "💻PRODUCTIVO📋") {
-    phaseMessage = "fase de PRODUCTIVIDAD";
-  } else if (phase === "🍵DESCANSO🍙") {
-    phaseMessage = "tiempo de DESCANSO";
-  } else if (phase === "INICIANDO") {
-    phaseMessage = "fase de INICIO";
-  }
+      if (phase === "💻PRODUCTIVO📋") {
+        phaseMessage = "fase de PRODUCTIVIDAD";
+      } else if (phase === "🍵DESCANSO🍙") {
+        phaseMessage = "tiempo de DESCANSO";
+      } else if (phase === "INICIANDO") {
+        phaseMessage = "fase de INICIO";
+      }
 
-  // Solo enviar si hay mensaje definido
-  if (phaseMessage) {
-    Client.current.say(
-      "cuartodechenz",
-      `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`
-    );
-  }
-}
+      // Solo enviar si hay mensaje definido
+      if (phaseMessage) {
+        Client.current.say(
+          "brunispet",
+          `⏱️ ¡Temporizador iniciado! ${phaseMessage} en marcha.`
+        );
+      }
+    }
 
     // Guardar el estado al iniciar
     saveState();
@@ -385,7 +431,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
 
       if (Client.current) {
         const remainingStr = formatTime(remaining);
-        Client.current.say("cuartodechenz", `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
+        Client.current.say("brunispet", `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
       }
     }
 
@@ -418,7 +464,8 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
   // Twitch controller y comandos
   useEffect(() => {
     Client.current = twitch_controller();
-    Client.current.on("message", (channel, tags, message, self) => {
+
+    const handleMessage = (channel, tags, message, self) => {
       if (self) return;
       const args = message.split(" ");
       const command = args[0].toLowerCase();
@@ -434,7 +481,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
         const mensajeMod = isMod ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨` : "";
         const mensajeVid = isVip && username !== "mohcitrus" ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟` : "";
 
-        Client.current.say("cuartodechenz", mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid);
+        Client.current.say(channel, mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid);
       }
 
       if (!message.startsWith("!")) return;
@@ -443,11 +490,11 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
       if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
         if (qrValueRef.current) {
           Client.current.say(
-            "cuartodechenz",
+            "brunispet",
             `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
         } else {
-          Client.current.say("cuartodechenz", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
+          Client.current.say("brunispet", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
         }
         return;
       }
@@ -496,7 +543,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
               setIsRunning(false);
 
               if (Client.current)
-                Client.current.say("cuartodechenz", `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
+                Client.current.say(channel, `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
 
               // limpiar bandera auto
               hasAutoStartedRef.current = false;
@@ -505,7 +552,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
               hasAutoStartedRef.current = false;
 
               if (Client.current)
-                Client.current.say("cuartodechenz", `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
+                Client.current.say(channel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
             }
 
             saveState();
@@ -553,7 +600,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
             // 6) Aviso al chat
             if (Client.current) {
               Client.current.say(
-                "cuartodechenz",
+                "brunispet",
                 "🔄 Timer y bot reiniciados. Iniciando en fase INICIANDO."
               );
             }
@@ -566,7 +613,7 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
         case "!codigo":
           const token = args.slice(1).join(" ");
           if (!token) {
-            Client.current.say("cuartodechenz", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
+            Client.current.say("brunispet", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
             return;
           }
           qrValueRef.current = token;
@@ -575,11 +622,16 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
         default:
           break;
       }
-    });
+    };
+
+    Client.current.on("message", handleMessage);
 
     return () => {
       if (Client.current) {
-        try { Client.current.disconnect(); } catch (e) { /* ignore */ }
+        try { 
+          Client.current.removeListener("message", handleMessage);
+          Client.current.disconnect(); 
+        } catch (e) { /* ignore */ }
       }
     };
   }, []);
@@ -587,10 +639,14 @@ if (Client.current && phase !== "🌳HEMOS TERMINADO🌳") {
   return (
     <div className="container">
       <div className="element_1">
-        <Qrcode token={qrValue} />
+        <Suspense fallback={<div className="loading-placeholder">Cargando QR...</div>}>
+          <Qrcode token={qrValue} />
+        </Suspense>
       </div>
       <div className="element_2">
-        <News message={aviso} />
+        <Suspense fallback={<div className="loading-placeholder">Cargando noticias...</div>}>
+          <News message={aviso} />
+        </Suspense>
       </div>
       <div className="element_3">
         <div className={`consola elemente_3_a ${backgroundImage}`}></div>
