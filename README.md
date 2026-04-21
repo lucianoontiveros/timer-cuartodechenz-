@@ -7,9 +7,9 @@ Este proyecto implementa un temporizador Pomodoro interactivo para el canal de T
 
 ### Temporizador Pomodoro Mejorado
 - **Fases del Temporizador**:
-  - `INICIANDO`: Estado inicial del temporizador
-  - `💻PRODUCTIVO📋`: Fase de trabajo (60 minutos por defecto)
-  - `🍵DESCANSO🍙`: Fase de descanso (10 minutos por defecto)
+  - `INICIANDO`: Estado inicial del temporizador (10 minutos)
+  - `💻PRODUCTIVO📋`: Fase de trabajo (90 minutos por defecto)
+  - `🍵DESCANSO🍙`: Fase de descanso (15 minutos por defecto)
   - `🌳HEMOS TERMINADO🌳`: Estado final al completar todos los pomodoros
 
 - **Modos de Operación**:
