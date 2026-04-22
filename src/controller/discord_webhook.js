@@ -31,11 +31,8 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
   const cleanPhase = phase.replace(/[^\w]/g, '');
   const color = phaseColors[cleanPhase] || 0x3498db;
   
-  // Formatear duración
-  const durationMinutes = Math.floor(duration / 60);
-  const durationText = durationMinutes > 60 
-    ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}min`
-    : `${durationMinutes}min`;
+  // La sala siempre tiene duración de 90 minutos (tiempo productivo)
+  const durationText = "90min";
 
   const payload = {
     content: "¡Nueva sala de estudio disponible!",
