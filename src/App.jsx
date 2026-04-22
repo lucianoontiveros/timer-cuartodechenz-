@@ -512,9 +512,6 @@ const App = () => {
             channel,
             `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
-          
-          // Enviar notificación a Discord
-          sendDiscordNotification(qrValueRef.current, phase, timeLeft, username);
         } else {
           const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
           Client.current.say(channel, "No hay un código configurado. Usa !codigo [token] para establecer uno.");
