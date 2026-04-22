@@ -411,6 +411,38 @@ const App = () => {
     saveState();
   }, [computeRemaining, phase, startWithRemaining, handlePhaseSwitch, saveState]);
 
+  // Set minutes - cambiar tiempo del timer dinámicamente
+  const setMinutes = useCallback((minutes) => {
+    const newTimeLeft = minutes * 60;
+    setTimeLeft(newTimeLeft);
+    remainingBeforeStartRef.current = newTimeLeft;
+    if (isRunningRef.current) {
+      startWithRemaining(newTimeLeft);
+    }
+    if (Client.current) {
+      const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
+      Client.current.say(channel, `⏱️ Tiempo actualizado a ${minutes} minutos.`);
+    }
+  }, [startWithRemaining]);
+
+  // Set pomodoros - cambiar contador de pomodoros completados
+  const setPomodoros = useCallback((count) => {
+    setPomodorosCompleted(count);
+    if (Client.current) {
+      const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
+      Client.current.say(channel, `📊 Pomodoros actualizados a ${count}.`);
+    }
+  }, []);
+
+  // Set total pomodoros - cambiar total de pomodoros
+  const setTotalPomodorosCount = useCallback((count) => {
+    setTotalPomodoros(count);
+    if (Client.current) {
+      const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
+      Client.current.say(channel, `🎯 Total de pomodoros actualizado a ${count}.`);
+    }
+  }, []);
+
   // Pause timer
   const pauseTimer = useCallback(() => {
     if (timerRef.current) {
@@ -519,6 +551,8 @@ const App = () => {
             endTimestampRef.current = null;
           }
 
+          const targetChannel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
+
           setMode((prevMode) => {
             const updatedMode = prevMode === "auto" ? "manual" : "auto";
             modeRef.current = updatedMode;
@@ -535,7 +569,7 @@ const App = () => {
               setIsRunning(false);
 
               if (Client.current)
-                Client.current.say(channel, `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
+                Client.current.say(targetChannel, `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
 
               // limpiar bandera auto
               hasAutoStartedRef.current = false;
@@ -544,7 +578,7 @@ const App = () => {
               hasAutoStartedRef.current = false;
 
               if (Client.current)
-                Client.current.say(channel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
+                Client.current.say(targetChannel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
             }
 
             saveState();
