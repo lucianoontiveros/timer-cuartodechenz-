@@ -618,11 +618,17 @@ const App = () => {
         case "!codigo":
           const token = args.slice(1).join(" ");
           if (!token) {
-            Client.current.say("brunispet", "❌ Debes proporcionar un token válido. Ejemplo: !codigo [token]");
+            Client.current.say("brunispet", " Debes proporcionar un token válido. Ejemplo: !codigo [token]");
             return;
           }
           qrValueRef.current = token;
           setQrValue(token);
+          
+          // Enviar notificación a Discord automáticamente
+          sendDiscordNotification(token, phase, timeLeft, username);
+          
+          // Confirmar al chat
+          Client.current.say("brunispet", `Código establecido y notificación enviada a Discord: ${token.toUpperCase()}`);
           break;
         default:
           break;
