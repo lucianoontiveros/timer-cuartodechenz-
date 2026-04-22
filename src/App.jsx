@@ -335,7 +335,7 @@ const App = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRunning, computeRemaining, handlePhaseSwitch, phase, pomodorosCompleted, timeLeft, startWithRemaining]);
+  }, [isRunning, computeRemaining, handlePhaseSwitch, phase, pomodorosCompleted, startWithRemaining]);
 
   // Efecto que reacciona cuando timeLeft llega a 0 por fuera del tick (solo para mensaje final)
   useEffect(() => {
