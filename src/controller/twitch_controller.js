@@ -4,13 +4,24 @@ export const twitch_controller = () => {
   const { VITE_APP_USERNAME, VITE_APP_PASSWORD, VITE_APP_CHANNELS } =
     import.meta.env;
 
+  // Verificar que las variables de entorno estén configuradas
+  if (!VITE_APP_USERNAME || !VITE_APP_PASSWORD || !VITE_APP_CHANNELS) {
+    console.error('Error: Faltan variables de entorno de Twitch:');
+    console.error('VITE_APP_USERNAME:', !!VITE_APP_USERNAME);
+    console.error('VITE_APP_PASSWORD:', !!VITE_APP_PASSWORD);
+    console.error('VITE_APP_CHANNELS:', !!VITE_APP_CHANNELS);
+    console.error('Asegúrate de tener un archivo .env con estas variables configuradas');
+    return null;
+  }
+
   console.log('Configurando cliente de Twitch con:', {
     username: VITE_APP_USERNAME,
-    channels: VITE_APP_CHANNELS
+    channels: VITE_APP_CHANNELS,
+    hasToken: !!VITE_APP_PASSWORD
   });
 
   const opts = {
-    options: { debug: false, }, 
+    options: { debug: true, },
     identity: {
       username: VITE_APP_USERNAME,
       password: VITE_APP_PASSWORD,
