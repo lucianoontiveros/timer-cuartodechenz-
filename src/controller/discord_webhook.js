@@ -61,7 +61,7 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
         },
         {
           name: "Enlace Forest",
-          value: `[https://forestapp.cc/join-room?token=${qrCode}](https://forestapp.cc/join-room?token=${qrCode})`,
+          value: `https://forestapp.cc/join-room?token=${qrCode}`,
           inline: false
         }
       ],
