@@ -19,15 +19,17 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
     return false;
   }
 
-  // Determinar color según la fase
+  // Determinar color según la fase (manejar emojis)
   const phaseColors = {
-    'INICIANDO': 0x3498db,      // Azul
-    'PRODUCTIVO': 0x2ecc71,     // Verde
-    'DESCANSO': 0xf39c12,        // Naranja
-    'TERMINADO': 0xe74c3c        // Rojo
+    'INICIANDO': 0x3498db,           // Azul
+    'PRODUCTIVO': 0x2ecc71,          // Verde
+    'DESCANSO': 0xf39c12,            // Naranja
+    'TERMINADO': 0xe74c3c             // Rojo
   };
 
-  const color = phaseColors[phase] || 0x3498db;
+  // Limpiar fase para obtener el nombre base (remover emojis y caracteres especiales)
+  const cleanPhase = phase.replace(/[^\w]/g, '');
+  const color = phaseColors[cleanPhase] || 0x3498db;
   
   // Formatear duración
   const durationMinutes = Math.floor(duration / 60);
@@ -71,6 +73,8 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
   };
 
   try {
+    console.log('Enviando notificación a Discord:', { qrCode, phase, duration, username });
+    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -83,11 +87,11 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
       console.log('Notificación de Discord enviada exitosamente');
       return true;
     } else {
-      console.warn('Error al enviar notificación a Discord:', response.status);
+      console.warn('Error al enviar notificación a Discord:', response.status, response.statusText);
       return false;
     }
   } catch (error) {
-    console.error('Error enviando notificación a Discord:', error);
+    console.error('Error enviando notificación a Discord:', error.message);
     return false;
   }
 };
