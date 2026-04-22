@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { twitch_controller } from "./controller/twitch_controller";
 import { enviarMensaje } from "./controller/controller_mensajes";
+import { sendDiscordNotification, sendPhaseChangeNotification } from "./controller/discord_webhook";
 import "./index.css";
 import { formatTime } from "./components/utils/formatTime";
 import campana from "./components/utils/campana.mp3";
@@ -489,10 +490,14 @@ const App = () => {
       // ciertos comandos solo pueden ser usados por el propio usuario o mods
       if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
         if (qrValueRef.current) {
+          // Enviar mensaje a Twitch
           Client.current.say(
             "brunispet",
             `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
+          
+          // Enviar notificación a Discord
+          sendDiscordNotification(qrValueRef.current, phase, timeLeft, username);
         } else {
           Client.current.say("brunispet", "No hay un código configurado. Usa !codigo [token] para establecer uno.");
         }

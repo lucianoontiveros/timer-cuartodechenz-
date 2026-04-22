@@ -24,6 +24,26 @@ Este proyecto implementa un temporizador Pomodoro interactivo para el canal de T
 ### Interacción por Chat
 Los espectadores pueden interactuar con el temporizador mediante comandos en el chat de Twitch.
 
+### Integración con Discord (v1.3.0+)
+El timer ahora envía notificaciones automáticas a Discord mediante webhooks:
+
+- **Notificaciones de Sala**: Cuando se usa `!sala`, se envía un mensaje embed a Discord con:
+  - Código de la sala
+  - Duración y fase actual
+  - Enlace directo a Forest
+  - Usuario que generó la sala
+
+- **Notificaciones de Cambio de Fase**: Opcionalmente puede notificar cambios de fase
+
+#### Configuración de Discord Webhook:
+1. Crea un webhook en tu servidor Discord
+2. Copia la URL del webhook
+3. Agrega al archivo `.env`:
+   ```bash
+   VITE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/[ID]/[TOKEN]
+   ```
+4. Las notificaciones se enviarán automáticamente al usar comandos de sala
+
 # 📁 Estructura del Proyecto
 - **App.jsx**: Contiene la lógica principal del temporizador, gestión de estados y control de flujo de la aplicación.
 - **Qrcode.jsx**: Genera y muestra códigos QR interactivos.
@@ -33,6 +53,7 @@ Los espectadores pueden interactuar con el temporizador mediante comandos en el 
 - **index.css**: Estilos globales y variables de diseño.
 - **/controller/twitch_controller.js**: Maneja la conexión con la API de Twitch.
 - **/controller/controller_mensajes.js**: Gestiona los mensajes enviados al chat de Twitch.
+- **/controller/discord_webhook.js**: Controla las notificaciones a Discord mediante webhooks.
 
 # 🎮 Comandos del Chat
 
