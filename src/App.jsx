@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { twitch_controller } from "./controller/twitch_controller";
 import { enviarMensaje } from "./controller/controller_mensajes";
-import { sendDiscordNotification, sendPhaseChangeNotification } from "./controller/discord_webhook";
+import { sendDiscordNotification } from "./controller/discord_webhook";
 import "./index.css";
 import { formatTime } from "./components/utils/formatTime";
 import campana from "./components/utils/campana.mp3";
@@ -638,14 +638,14 @@ const App = () => {
           const token = args.slice(1).join(" ");
           if (!token) {
             const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-            Client.current.say(channel, " Debes proporcionar un token válido. Ejemplo: !codigo [token]");
+            Client.current.say(channel, " Debes proporcionar un token válido. Ejemplo: !codigo [token] - Si quieres consultar el código de la salita existente: !sala, !code, !room, !salita - públicos para todos los usuarios");
             return;
           }
           qrValueRef.current = token;
           setQrValue(token);
           
           // Enviar notificación a Discord automáticamente
-          sendDiscordNotification(token, phase, timeLeft, username);
+          sendDiscordNotification(token, phase, timeLeft, username, pomodorosCompleted);
           
           // Confirmar al chat
           const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
