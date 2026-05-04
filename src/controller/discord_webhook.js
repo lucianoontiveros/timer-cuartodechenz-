@@ -80,6 +80,9 @@ export const sendDiscordNotification = async (qrCode, phase, duration, username 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Timer-CuartoDeChenz/1.5.0',
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip, deflate, br',
       },
       body: JSON.stringify(payload)
     });

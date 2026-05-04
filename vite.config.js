@@ -81,6 +81,14 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      '/api/twitch': {
+        target: 'https://api.twitch.tv',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/twitch/, ''),
+        secure: true,
+      }
+    }
   },
   // Optimizaciones de preview
   preview: {

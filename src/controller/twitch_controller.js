@@ -21,7 +21,10 @@ export const twitch_controller = () => {
   });
 
   const opts = {
-    options: { debug: true, },
+    options: { 
+      debug: true,
+      updateEmotesetsTimer: 0, // Desactivar carga de emoticones para evitar CORS
+    },
     identity: {
       username: VITE_APP_USERNAME,
       password: VITE_APP_PASSWORD,
