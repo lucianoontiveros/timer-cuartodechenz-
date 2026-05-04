@@ -1,7 +1,8 @@
 {
+  "version": 2,
   "functions": {
     "src/**/*.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "vercel/node@20.x"
     }
   },
   "headers": [
