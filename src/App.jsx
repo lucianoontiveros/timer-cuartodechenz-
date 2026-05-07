@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from "react";
 import { twitch_controller } from "./controller/twitch_controller";
 import { enviarMensaje } from "./controller/controller_mensajes";
 import { sendDiscordNotification } from "./controller/discord_webhook";
@@ -17,7 +17,7 @@ const DURATIONS = {
   TERMINADO: 0,
 };
 
-const App = () => {
+const App = memo(() => {
   const [timeLeft, setTimeLeft] = useState(DURATIONS.INICIANDO);
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState("INICIANDO");
@@ -710,6 +710,6 @@ const App = () => {
       </div>
     </div>
   );
-};
+});
 
 export default App;
