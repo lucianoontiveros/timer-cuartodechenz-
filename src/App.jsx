@@ -11,8 +11,8 @@ const Qrcode = lazy(() => import("./components/Qrcode"));
 
 const DURATIONS = {
   INICIANDO: 10 * 60,
-  PRODUCTIVO: 90 * 60,
-  DESCANSO: 15 * 60,
+  PRODUCTIVO: 25 * 60,
+  DESCANSO: 5 * 60,
   TERMINADO: 0,
 };
 
