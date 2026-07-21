@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  lazy,
+  Suspense,
+  memo,
+} from "react";
 import { twitch_controller_direct } from "./controller/twitch_direct";
 import { twitch_controller } from "./controller/twitch_controller";
 import { enviarMensaje } from "./controller/controller_mensajes";
@@ -13,8 +21,8 @@ const Qrcode = lazy(() => import("./components/Qrcode"));
 
 const DURATIONS = {
   INICIANDO: 10 * 60,
-  PRODUCTIVO: 90 * 60,
-  DESCANSO: 15 * 60,
+  PRODUCTIVO: 60 * 60,
+  DESCANSO: 10 * 60,
   TERMINADO: 0,
 };
 
@@ -54,12 +62,12 @@ const App = memo(() => {
       const keys = Object.keys(localStorage);
       const now = Date.now();
       const maxAge = 24 * 60 * 60 * 1000; // 24 horas
-      
-      keys.forEach(key => {
-        if (key.startsWith('pomodoroState')) {
+
+      keys.forEach((key) => {
+        if (key.startsWith("pomodoroState")) {
           try {
             const data = JSON.parse(localStorage.getItem(key));
-            if (data && data.timestamp && (now - data.timestamp > maxAge)) {
+            if (data && data.timestamp && now - data.timestamp > maxAge) {
               localStorage.removeItem(key);
             }
           } catch (e) {
@@ -69,15 +77,15 @@ const App = memo(() => {
         }
       });
     } catch (e) {
-      console.warn('Error limpiando localStorage:', e);
+      console.warn("Error limpiando localStorage:", e);
     }
   }, []);
 
   // Efecto para cargar el estado guardado al inicio
   useEffect(() => {
     cleanupOldStorage();
-    
-    const savedState = localStorage.getItem('pomodoroState');
+
+    const savedState = localStorage.getItem("pomodoroState");
     if (savedState) {
       const state = JSON.parse(savedState);
       // Verificar que el estado no sea demasiado viejo (más de 1 hora)
@@ -95,7 +103,7 @@ const App = memo(() => {
         modeRef.current = state.mode;
       } else {
         // Si el estado es viejo, limpiar
-        localStorage.removeItem('pomodoroState');
+        localStorage.removeItem("pomodoroState");
       }
     }
   }, [cleanupOldStorage]);
@@ -113,35 +121,53 @@ const App = memo(() => {
         backgroundImage,
         remainingBeforeStart: remainingBeforeStartRef.current,
         hasAutoStarted: hasAutoStartedRef.current,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       // Validar que los datos sean válidos antes de guardar
-      if (typeof stateToSave.timeLeft === 'number' && 
-          typeof stateToSave.phase === 'string' &&
-          typeof stateToSave.timestamp === 'number') {
-        localStorage.setItem('pomodoroState', JSON.stringify(stateToSave));
+      if (
+        typeof stateToSave.timeLeft === "number" &&
+        typeof stateToSave.phase === "string" &&
+        typeof stateToSave.timestamp === "number"
+      ) {
+        localStorage.setItem("pomodoroState", JSON.stringify(stateToSave));
       }
     } catch (e) {
-      console.warn('Error guardando estado:', e);
+      console.warn("Error guardando estado:", e);
       // Si hay error, limpiar localStorage para evitar corrupción
       try {
-        localStorage.removeItem('pomodoroState');
+        localStorage.removeItem("pomodoroState");
       } catch (cleanupError) {
-        console.warn('Error limpiando localStorage:', cleanupError);
+        console.warn("Error limpiando localStorage:", cleanupError);
       }
     }
-  }, [timeLeft, isRunning, phase, pomodorosCompleted, totalPomodoros, mode, backgroundImage]);
+  }, [
+    timeLeft,
+    isRunning,
+    phase,
+    pomodorosCompleted,
+    totalPomodoros,
+    mode,
+    backgroundImage,
+  ]);
 
   // Efecto para guardar el estado cuando cambie
   useEffect(() => {
     saveState();
-  }, [saveState, timeLeft, isRunning, phase, pomodorosCompleted, totalPomodoros, mode]);
+  }, [
+    saveState,
+    timeLeft,
+    isRunning,
+    phase,
+    pomodorosCompleted,
+    totalPomodoros,
+    mode,
+  ]);
 
   // Efecto para limpiar el estado cuando se complete la sesión
   useEffect(() => {
     if (phase === "🌳HEMOS TERMINADO🌳" && timeLeft === 0) {
-      localStorage.removeItem('pomodoroState');
+      localStorage.removeItem("pomodoroState");
     }
   }, [phase, timeLeft]);
 
@@ -168,7 +194,12 @@ const App = memo(() => {
       const minutes = String(now.getMinutes()).padStart(2, "0");
       const seconds = String(now.getSeconds()).padStart(2, "0");
       setCurrentTime(`${hours}:${minutes}:${seconds}`);
-      const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
       setCurrentDate(now.toLocaleDateString("es-AR", options));
     };
 
@@ -189,7 +220,8 @@ const App = memo(() => {
 
   // Calcular remaining usando timestamps - evita drift
   const computeRemaining = useCallback(() => {
-    if (!endTimestampRef.current) return Math.max(0, Math.ceil(remainingBeforeStartRef.current));
+    if (!endTimestampRef.current)
+      return Math.max(0, Math.ceil(remainingBeforeStartRef.current));
     const ms = endTimestampRef.current - Date.now();
     return Math.max(0, Math.ceil(ms / 1000));
   }, []);
@@ -249,12 +281,18 @@ const App = memo(() => {
 
     // Aplicar la fase calculada
     setPhase(nextPhase);
-    setBackgroundImage(nextPhase === "💻PRODUCTIVO📋" ? "productivo" : "descanso");
+    setBackgroundImage(
+      nextPhase === "💻PRODUCTIVO📋" ? "productivo" : "descanso"
+    );
     if (incrementPomodoro) setPomodorosCompleted((p) => p + 1);
 
     // Si estamos en modo AUTO y ya hubo un inicio manual (hasAutoStartedRef true),
     // entonces la siguiente fase debe iniciarse automáticamente. Si no, esperar !start.
-    if (modeRef.current === "auto" && hasAutoStartedRef.current && nextRemaining > 0) {
+    if (
+      modeRef.current === "auto" &&
+      hasAutoStartedRef.current &&
+      nextRemaining > 0
+    ) {
       // iniciar timestamps y arrancar
       remainingBeforeStartRef.current = nextRemaining;
       startWithRemaining(nextRemaining);
@@ -265,7 +303,7 @@ const App = memo(() => {
       if (!timerRef.current) {
         timerRef.current = setInterval(() => {
           const remaining = computeRemaining();
-          
+
           // Guardar el último remaining
           remainingBeforeStartRef.current = remaining;
 
@@ -291,7 +329,14 @@ const App = memo(() => {
 
     // Guardar el estado después del cambio de fase
     saveState();
-  }, [computeRemaining, pomodorosCompleted, totalPomodoros, phase, startWithRemaining, saveState]);
+  }, [
+    computeRemaining,
+    pomodorosCompleted,
+    totalPomodoros,
+    phase,
+    startWithRemaining,
+    saveState,
+  ]);
 
   // Efecto principal que administra el interval cuando isRunning cambia
   useEffect(() => {
@@ -306,7 +351,9 @@ const App = memo(() => {
 
     // Si no hay endTimestamp (por ejemplo reinicio/crash), restaurarlo usando remainingBeforeStartRef
     if (!endTimestampRef.current) {
-      startWithRemaining(remainingBeforeStartRef.current || DURATIONS.INICIANDO);
+      startWithRemaining(
+        remainingBeforeStartRef.current || DURATIONS.INICIANDO
+      );
     }
 
     // enviar mensaje inicial de fase si corresponde
@@ -336,13 +383,28 @@ const App = memo(() => {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRunning, computeRemaining, handlePhaseSwitch, phase, pomodorosCompleted, startWithRemaining]);
+  }, [
+    isRunning,
+    computeRemaining,
+    handlePhaseSwitch,
+    phase,
+    pomodorosCompleted,
+    startWithRemaining,
+  ]);
 
   // Efecto que reacciona cuando timeLeft llega a 0 por fuera del tick (solo para mensaje final)
   useEffect(() => {
-    if (timeLeft <= 0 && phase === "🌳HEMOS TERMINADO🌳" && isRunningRef.current && Client.current) {
+    if (
+      timeLeft <= 0 &&
+      phase === "🌳HEMOS TERMINADO🌳" &&
+      isRunningRef.current &&
+      Client.current
+    ) {
       const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-      Client.current.say(channel, "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!");
+      Client.current.say(
+        channel,
+        "🌳 ¡Hemos terminado la sesión! ¡Gracias por participar!"
+      );
     }
   }, [timeLeft, phase]);
 
@@ -353,7 +415,12 @@ const App = memo(() => {
     // Si no hay remaining definido, configurar por fase
     let defaultRemaining = remainingBeforeStartRef.current;
     if (!defaultRemaining || defaultRemaining <= 0) {
-      defaultRemaining = phase === "🍵DESCANSO🍙" ? DURATIONS.DESCANSO : phase === "💻PRODUCTIVO📋" ? DURATIONS.PRODUCTIVO : DURATIONS.INICIANDO;
+      defaultRemaining =
+        phase === "🍵DESCANSO🍙"
+          ? DURATIONS.DESCANSO
+          : phase === "💻PRODUCTIVO📋"
+          ? DURATIONS.PRODUCTIVO
+          : DURATIONS.INICIANDO;
       remainingBeforeStartRef.current = defaultRemaining;
       setTimeLeft(defaultRemaining);
     }
@@ -410,21 +477,33 @@ const App = memo(() => {
 
     // Guardar el estado al iniciar
     saveState();
-  }, [computeRemaining, phase, startWithRemaining, handlePhaseSwitch, saveState]);
+  }, [
+    computeRemaining,
+    phase,
+    startWithRemaining,
+    handlePhaseSwitch,
+    saveState,
+  ]);
 
   // Set minutes - cambiar tiempo del timer dinámicamente
-  const setMinutes = useCallback((minutes) => {
-    const newTimeLeft = minutes * 60;
-    setTimeLeft(newTimeLeft);
-    remainingBeforeStartRef.current = newTimeLeft;
-    if (isRunningRef.current) {
-      startWithRemaining(newTimeLeft);
-    }
-    if (Client.current) {
-      const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-      Client.current.say(channel, `⏱️ Tiempo actualizado a ${minutes} minutos.`);
-    }
-  }, [startWithRemaining]);
+  const setMinutes = useCallback(
+    (minutes) => {
+      const newTimeLeft = minutes * 60;
+      setTimeLeft(newTimeLeft);
+      remainingBeforeStartRef.current = newTimeLeft;
+      if (isRunningRef.current) {
+        startWithRemaining(newTimeLeft);
+      }
+      if (Client.current) {
+        const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
+        Client.current.say(
+          channel,
+          `⏱️ Tiempo actualizado a ${minutes} minutos.`
+        );
+      }
+    },
+    [startWithRemaining]
+  );
 
   // Set pomodoros - cambiar contador de pomodoros completados
   const setPomodoros = useCallback((count) => {
@@ -440,7 +519,10 @@ const App = memo(() => {
     setTotalPomodoros(count);
     if (Client.current) {
       const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-      Client.current.say(channel, `🎯 Total de pomodoros actualizado a ${count}.`);
+      Client.current.say(
+        channel,
+        `🎯 Total de pomodoros actualizado a ${count}.`
+      );
     }
   }, []);
 
@@ -466,7 +548,10 @@ const App = memo(() => {
       if (Client.current) {
         const remainingStr = formatTime(remaining);
         const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-        Client.current.say(channel, `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`);
+        Client.current.say(
+          channel,
+          `⏸️ Temporizador pausado con ${remainingStr} restantes. Usa !start para reanudar.`
+        );
       }
     }
 
@@ -477,9 +562,11 @@ const App = memo(() => {
   // ...
   useEffect(() => {
     Client.current = twitch_controller();
-    
+
     if (!Client.current) {
-      console.error('No se pudo inicializar el cliente de Twitch. Verifica las variables de entorno.');
+      console.error(
+        "No se pudo inicializar el cliente de Twitch. Verifica las variables de entorno."
+      );
       return;
     }
 
@@ -492,36 +579,64 @@ const App = memo(() => {
       const isVip = tags.badges?.vip;
       const isMod = tags.badges?.moderator;
 
-      if (!greetedUsers.current.has(username) && username.toLowerCase() !== 'cuartodechenz' && username.toLowerCase() !== 'brunispet') {
+      if (
+        !greetedUsers.current.has(username) &&
+        username.toLowerCase() !== "cuartodechenz" &&
+        username.toLowerCase() !== "brunispet"
+      ) {
         greetedUsers.current.add(username);
         const mensajeGeneral = `¡Qué alegría verte por aquí, ${username}! Espero que tengas una jornada productiva. 📚✨`;
-        const mensajeSubs = isSub ? `👑 ¡Mil gracias por apoyar este canal! Gracias a ti, las croquetas para mí y los michis están aseguradas. 🐱💕` : `¡Mucho ánimo con todo lo que tengas por delante! 💪📖`;
-        const mensajeMod = isMod ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨` : "";
-        const mensajeVid = isVip && username !== "mohcitrus" ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟` : "";
+        const mensajeSubs = isSub
+          ? `👑 ¡Mil gracias por apoyar este canal! Gracias a ti, las croquetas para mí y los michis están aseguradas. 🐱💕`
+          : `¡Mucho ánimo con todo lo que tengas por delante! 💪📖`;
+        const mensajeMod = isMod
+          ? `⚔️ ¡Nuestra comunidad está en buenas manos contigo como mod! Gracias por ayudar a que esto sea un espacio increíble. ✨`
+          : "";
+        const mensajeVid =
+          isVip && username !== "mohcitrus"
+            ? `💎 ¡Nos encanta verte por aquí! Tu presencia hace que estos días sean aún más especiales. 🌟`
+            : "";
 
-        Client.current.say(channel, mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid);
+        Client.current.say(
+          channel,
+          mensajeGeneral + mensajeSubs + mensajeMod + mensajeVid
+        );
       }
 
       if (!message.startsWith("!")) return;
 
       // ciertos comandos solo pueden ser usados por el propio usuario o mods
-      if (command === "!sala" || command === "!code" || command === "!room" || command === "!salita") {
+      if (
+        command === "!sala" ||
+        command === "!code" ||
+        command === "!room" ||
+        command === "!salita"
+      ) {
         if (qrValueRef.current) {
           // Enviar mensaje a Twitch
           const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
           Client.current.say(
             channel,
-            `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${qrValueRef.current} Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
+            `🌳CÓDIGO: ${qrValueRef.current.toUpperCase()} - Únete a la sala: https://forestapp.cc/join-room?token=${
+              qrValueRef.current
+            } Por favor desactiva la opción concentración profunda. Si no sabes como hacerlo, te ensañamos. De lo contrario puedes pedirnos una salita con esa funcionalidad activa`
           );
         } else {
           const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-          Client.current.say(channel, "No hay un código configurado. Usa !codigo [token] para establecer uno.");
+          Client.current.say(
+            channel,
+            "No hay un código configurado. Usa !codigo [token] para establecer uno."
+          );
         }
         return;
       }
 
       const botUsername = import.meta.env.VITE_APP_USERNAME || "brunispet";
-      if (tags.username !== "cuartodechenz" && tags.username !== botUsername && !tags.mod) {
+      if (
+        tags.username !== "cuartodechenz" &&
+        tags.username !== botUsername &&
+        !tags.mod
+      ) {
         return; // ignorar comandos administrativos
       }
 
@@ -539,53 +654,61 @@ const App = memo(() => {
           if (args[1] && !isNaN(args[1])) setPomodoros(parseInt(args[1]));
           break;
         case "!pomot":
-          if (args[1] && !isNaN(args[1])) setTotalPomodorosCount(parseInt(args[1]));
+          if (args[1] && !isNaN(args[1]))
+            setTotalPomodorosCount(parseInt(args[1]));
           break;
-        case "!mode": {
-          // Protección: si justo llegó a 0, bloqueamos el cambio de fase pendiente
-          if (timeLeft <= 1) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-            endTimestampRef.current = null;
-          }
-
-          const targetChannel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-
-          setMode((prevMode) => {
-            const updatedMode = prevMode === "auto" ? "manual" : "auto";
-            modeRef.current = updatedMode;
-
-            // Limpiar interval siempre
-            if (timerRef.current) {
+        case "!mode":
+          {
+            // Protección: si justo llegó a 0, bloqueamos el cambio de fase pendiente
+            if (timeLeft <= 1) {
               clearInterval(timerRef.current);
               timerRef.current = null;
+              endTimestampRef.current = null;
             }
 
-            if (updatedMode === "manual") {
-              // detener y esperar !start
-              isRunningRef.current = false;
-              setIsRunning(false);
+            const targetChannel =
+              import.meta.env.VITE_APP_CHANNELS || "brunispet";
 
-              if (Client.current)
-                Client.current.say(targetChannel, `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`);
+            setMode((prevMode) => {
+              const updatedMode = prevMode === "auto" ? "manual" : "auto";
+              modeRef.current = updatedMode;
 
-              // limpiar bandera auto
-              hasAutoStartedRef.current = false;
-            } else {
-              // modo auto
-              hasAutoStartedRef.current = false;
+              // Limpiar interval siempre
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
 
-              if (Client.current)
-                Client.current.say(targetChannel, `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`);
-            }
+              if (updatedMode === "manual") {
+                // detener y esperar !start
+                isRunningRef.current = false;
+                setIsRunning(false);
 
-            saveState();
-            return updatedMode;
-          });
-        }
-        break;
+                if (Client.current)
+                  Client.current.say(
+                    targetChannel,
+                    `/me 🧭 Cambiado a modo MANUAL. Usa !start para reanudar cuando quieras.`
+                  );
+
+                // limpiar bandera auto
+                hasAutoStartedRef.current = false;
+              } else {
+                // modo auto
+                hasAutoStartedRef.current = false;
+
+                if (Client.current)
+                  Client.current.say(
+                    targetChannel,
+                    `/me 🤖 Cambiado a modo AUTOMÁTICO. Usa !start para iniciar y luego seguirá solo hasta completar el circuito.`
+                  );
+              }
+
+              saveState();
+              return updatedMode;
+            });
+          }
+          break;
         case "!reset":
-
           try {
             if (Client.current) {
               Client.current.disconnect();
@@ -629,7 +752,7 @@ const App = memo(() => {
               "🔄 Timer y bot reiniciados. Iniciando en fase INICIANDO."
             );
           }
-        break;
+          break;
         case "!aviso":
           const messageAviso = args.slice(1).join(" ");
           console.log("Aviso actualizado:", messageAviso);
@@ -639,18 +762,30 @@ const App = memo(() => {
           const token = args.slice(1).join(" ");
           if (!token) {
             const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-            Client.current.say(channel, " Debes proporcionar un token válido. Ejemplo: !codigo [token] - Si quieres consultar el código de la salita existente: !sala, !code, !room, !salita - públicos para todos los usuarios");
+            Client.current.say(
+              channel,
+              " Debes proporcionar un token válido. Ejemplo: !codigo [token] - Si quieres consultar el código de la salita existente: !sala, !code, !room, !salita - públicos para todos los usuarios"
+            );
             return;
           }
           qrValueRef.current = token;
           setQrValue(token);
-          
+
           // Enviar notificación a Discord automáticamente
-          sendDiscordNotification(token, phase, timeLeft, username, pomodorosCompleted);
-          
+          sendDiscordNotification(
+            token,
+            phase,
+            timeLeft,
+            username,
+            pomodorosCompleted
+          );
+
           // Confirmar al chat
           const channel = import.meta.env.VITE_APP_CHANNELS || "brunispet";
-          Client.current.say(channel, `Código establecido y notificación enviada a Discord: ${token.toUpperCase()}`);
+          Client.current.say(
+            channel,
+            `Código establecido y notificación enviada a Discord: ${token.toUpperCase()}`
+          );
           break;
         default:
           break;
@@ -661,10 +796,12 @@ const App = memo(() => {
 
     return () => {
       if (Client.current) {
-        try { 
+        try {
           Client.current.removeListener("message", handleMessage);
-          Client.current.disconnect(); 
-        } catch (e) { /* ignore */ }
+          Client.current.disconnect();
+        } catch (e) {
+          /* ignore */
+        }
       }
     };
   }, []);
@@ -672,12 +809,18 @@ const App = memo(() => {
   return (
     <div className="container">
       <div className="element_1">
-        <Suspense fallback={<div className="loading-placeholder">Cargando QR...</div>}>
+        <Suspense
+          fallback={<div className="loading-placeholder">Cargando QR...</div>}
+        >
           <Qrcode token={qrValue} />
         </Suspense>
       </div>
       <div className="element_2">
-        <Suspense fallback={<div className="loading-placeholder">Cargando noticias...</div>}>
+        <Suspense
+          fallback={
+            <div className="loading-placeholder">Cargando noticias...</div>
+          }
+        >
           <News message={aviso} />
         </Suspense>
       </div>
