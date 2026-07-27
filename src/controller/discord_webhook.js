@@ -51,7 +51,7 @@ export const sendDiscordNotification = async (
           },
           {
             name: "Duración",
-            value: "90min",
+            value: "60min",
             inline: true,
           },
           {
