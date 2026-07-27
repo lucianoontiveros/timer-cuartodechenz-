@@ -11,6 +11,14 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
+        // Eliminar completamente console logs
+        pure_funcs: [
+          'console.log',
+          'console.warn', 
+          'console.error',
+          'console.info',
+          'console.debug'
+        ],
         // Tree Shaking agresivo
         dead_code: true,
         unused: true,
@@ -81,6 +89,14 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      '/api/twitch': {
+        target: 'https://api.twitch.tv',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/twitch/, ''),
+        secure: true,
+      }
+    }
   },
   // Optimizaciones de preview
   preview: {
