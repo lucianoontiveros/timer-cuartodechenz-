@@ -74,7 +74,7 @@ export const sendDiscordNotification = async (
     console.log("📤 Enviando a Discord...");
     console.log("Webhook:", webhookUrl);
     console.log("Payload:", payload);
-
+// antes se queria modificar el header, pero no era necesario
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
