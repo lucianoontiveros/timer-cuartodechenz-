@@ -16,7 +16,7 @@ Este proyecto implementa un temporizador Pomodoro interactivo para el canal de T
   - **Automático**: Avanza automáticamente entre fases
   - **Manual**: Requiere confirmación para cambiar entre fases
 
-- **Visualización en Tiem Real**:
+- **Visualización en Tiempo Real**:
   - Muestra la fecha y hora actual en Córdoba, Argentina
   - Indicador visual de la fase actual
   - Contador de pomodoros completados
@@ -48,16 +48,33 @@ El timer ahora envía notificaciones automáticas a Discord mediante webhooks:
    ```
 4. Las notificaciones se enviarán automáticamente al usar comandos de sala
 
+### Versión Streaming Optimizada
+Para streaming con OBS, existe una versión ligera del timer (`StreamingApp.jsx`) que:
+- Elimina funcionalidades no esenciales (localStorage, fecha/hora, Twitch chat)
+- Optimiza el uso de CPU y memoria
+- Reduce el tamaño del bundle para mejor rendimiento
+- Configuración específica con `vite.streaming.config.js`
+
+### Conexión Twitch Optimizada
+El proyecto incluye dos métodos de conexión a Twitch:
+- **tmi.js**: Método tradicional (puede tener problemas CORS)
+- **twitch_direct.js**: Conexión WebSocket directa para evitar errores CORS
+
 # 📁 Estructura del Proyecto
 - **App.jsx**: Contiene la lógica principal del temporizador, gestión de estados y control de flujo de la aplicación.
+- **StreamingApp.jsx**: Versión optimizada para streaming con OBS.
 - **Qrcode.jsx**: Genera y muestra códigos QR interactivos.
 - **qrcode.css**: Estilos para el componente de código QR.
 - **News.jsx**: Muestra noticias o mensajes relevantes en la interfaz.
 - **news.css**: Estilos para el componente de noticias.
 - **index.css**: Estilos globales y variables de diseño.
-- **/controller/twitch_controller.js**: Maneja la conexión con la API de Twitch.
+- **/controller/twitch_controller.js**: Maneja la conexión con la API de Twitch (método tradicional).
+- **/controller/twitch_direct.js**: Conexión WebSocket directa a Twitch IRC para evitar CORS.
 - **/controller/controller_mensajes.js**: Gestiona los mensajes enviados al chat de Twitch.
 - **/controller/discord_webhook.js**: Controla las notificaciones a Discord mediante webhooks.
+- **/components/utils/formatTime.js**: Utilidad para formatear el tiempo.
+- **vite.config.js**: Configuración principal de Vite.
+- **vite.streaming.config.js**: Configuración específica para build de streaming.
 
 # 🎮 Comandos del Chat
 
@@ -159,15 +176,32 @@ La aplicación responde a los siguientes comandos en el chat de Twitch:
    npm run preview
    ```
 
+6. **Construir Versión Streaming**
+   ```bash
+   npm run build:streaming
+   ```
+
 
 # 🔗 Integración con Twitch
 
-La aplicación se conecta al chat de Twitch mediante la API de tmi.js, permitiendo:
+La aplicación se conecta al chat de Twitch mediante dos métodos:
 
+## Método 1: tmi.js (Tradicional)
 - Interacción en tiempo real con los espectadores
 - Control del temporizador mediante comandos de chat
 - Mensajes automáticos en diferentes fases del temporizador
 - Saludos personalizados para nuevos usuarios, suscriptores y moderadores
+
+## Método 2: twitch_direct.js (WebSocket Directo)
+- Conexión WebSocket directa a Twitch IRC
+- Evita errores CORS en producción
+- Mayor estabilidad de conexión
+- Menor consumo de recursos
+
+Para usar el método directo, cambia el import en `App.jsx`:
+```javascript
+import { twitch_controller_direct } from "./controller/twitch_direct";
+```
 
 ### Configuración de la Cuenta de Bot
 1. Crea una cuenta de desarrollador en [Twitch Developer Console](https://dev.twitch.tv/console)
@@ -175,7 +209,7 @@ La aplicación se conecta al chat de Twitch mediante la API de tmi.js, permitien
 3. Genera un token OAuth para el bot en [Twitch Token Generator](https://twitchtokengenerator.com/)
 4. Configura las variables de entorno según las instrucciones de instalación
 
-## � Optimización de Rendimiento (v1.3.0)
+## ⚡ Optimización de Rendimiento (v1.3.0+)
 
 ### Mejoras de Performance
 - **Lazy Loading**: Componentes QR y News cargados bajo demanda
@@ -183,6 +217,7 @@ La aplicación se conecta al chat de Twitch mediante la API de tmi.js, permitien
 - **Splitting Inteligente**: 9 chunks especializados para cache óptimo
 - **Bundle Optimizado**: Reducción 93% del bundle inicial (191KB → 13KB)
 - **Memory Management**: Cleanup automático de localStorage y prevención de memory leaks
+- **Console Logs Eliminados**: Configuración de Terser para eliminar console logs en producción
 
 ### Métricas de Optimización
 | Métrica | Antes | Después | Mejora |
@@ -197,14 +232,21 @@ La aplicación se conecta al chat de Twitch mediante la API de tmi.js, permitien
 - **Tree Shaking**: Eliminación de código no utilizado
 - **Code Splitting**: Carga progresiva de componentes
 - **Cache**: Estrategia de cache granular por navegador
+- **Console Removal**: Eliminación de console logs en build de producción
 
-## �🛠️ Mantenimiento y Mejoras
+## 🛠️ Mantenimiento y Mejoras
 
 ### Estructura del Código
 - Organización modular con separación clara de responsabilidades
 - Componentes reutilizables y bien documentados
 - Lazy loading implementado para componentes pesados
 - Memory leaks prevenidos con cleanup automático
+- Dos métodos de conexión a Twitch para mayor flexibilidad
+- Versión streaming optimizada para OBS
+
+### Documentación Adicional
+- **TWITCH_ALTERNATIVES.md**: Documentación sobre alternativas a tmi.js para evitar errores CORS
+- **.env.example**: Ejemplo de configuración de variables de entorno
 
 ### Próximas Mejoras
 - [ ] Añadir más comandos personalizables
